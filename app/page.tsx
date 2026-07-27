@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { EventCard, ForgeFooter, ForgeHeader, SectionEyebrow } from "./components";
 import { forgeValues, upcomingEvents } from "./data";
+import { HomeMotion } from "./home-motion";
 
 export default function Home() {
   return (
     <>
+      <HomeMotion />
       <ForgeHeader />
       <main>
         <section className="hero">
@@ -35,7 +37,7 @@ export default function Home() {
 
         <section className="mission section" id="mission">
           <div className="shell split">
-            <div className="split__copy">
+            <div className="split__copy" data-reveal>
               <SectionEyebrow>Our mission</SectionEyebrow>
               <h2>Strength with a foundation.</h2>
               <p className="lede">
@@ -52,7 +54,7 @@ export default function Home() {
                 <cite>Proverbs 27:17</cite>
               </blockquote>
             </div>
-            <div className="photo-stack" aria-label="Forge boys and coaches">
+            <div className="photo-stack reveal-delay-1" aria-label="Forge boys and coaches" data-reveal>
               <img src="/images/forge-mission.jpg" alt="Forge participants training together" />
               <div className="photo-stack__badge">
                 <strong>F·F·F·F</strong>
@@ -64,14 +66,20 @@ export default function Home() {
 
         <section className="values section section--dark">
           <div className="shell">
-            <SectionEyebrow>What we stand for</SectionEyebrow>
-            <div className="section-heading">
+            <div data-reveal>
+              <SectionEyebrow>What we stand for</SectionEyebrow>
+            </div>
+            <div className="section-heading reveal-delay-1" data-reveal>
               <h2>F·O·R·G·E</h2>
               <p>A clear standard for the men we are becoming.</p>
             </div>
             <div className="value-grid">
-              {forgeValues.map((value) => (
-                <article className="value-card" key={value.letter}>
+              {forgeValues.map((value, index) => (
+                <article
+                  className={`value-card reveal-delay-${(index % 3) + 1}`}
+                  data-reveal
+                  key={value.letter}
+                >
                   <span className="value-card__letter">{value.letter}</span>
                   <div>
                     <h3>{value.title}</h3>
@@ -87,7 +95,7 @@ export default function Home() {
 
         <section className="section events-preview">
           <div className="shell">
-            <div className="section-heading section-heading--row">
+            <div className="section-heading section-heading--row" data-reveal>
               <div>
                 <SectionEyebrow>Get in the arena</SectionEyebrow>
                 <h2>Upcoming events</h2>
@@ -96,7 +104,7 @@ export default function Home() {
                 View all events <span>→</span>
               </Link>
             </div>
-            <div className="event-grid">
+            <div className="event-grid reveal-delay-1" data-reveal>
               {upcomingEvents.map((event) => (
                 <EventCard event={event} key={event.slug} />
               ))}
@@ -106,7 +114,7 @@ export default function Home() {
 
         <section className="brotherhood">
           <div className="brotherhood__image" />
-          <div className="shell brotherhood__content">
+          <div className="shell brotherhood__content" data-reveal>
             <SectionEyebrow>Show up. Get stronger.</SectionEyebrow>
             <h2>Every boy needs a brotherhood.</h2>
             <p>
@@ -121,12 +129,12 @@ export default function Home() {
 
         <section className="newsletter section">
           <div className="shell newsletter__inner">
-            <div>
+            <div data-reveal>
               <SectionEyebrow>Stay in the loop</SectionEyebrow>
               <h2>New events. Forge updates. No noise.</h2>
               <p>Join the general Forge email list for announcements and new event dates.</p>
             </div>
-            <form className="newsletter__form">
+            <form className="newsletter__form reveal-delay-1" data-reveal>
               <label>
                 <span>First name</span>
                 <input name="firstName" placeholder="First name" />
