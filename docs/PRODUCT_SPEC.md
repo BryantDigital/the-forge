@@ -71,7 +71,10 @@ supported by real Forge photography.
 - General newsletter consent remains separate from operational email.
 - Parent mobile number is required.
 - SMS consent is optional, unchecked, versioned, and timestamped.
-- Event SMS is modeled now and enabled after Mailchimp SMS is configured.
+- Event SMS is delivered through Twilio after explicit household consent.
+- Registration-open and waitlist alerts can be delivered by email, SMS, or both.
+- Admins can target registered families, waitlisted families, or everyone
+  attached to an event and see opted-in recipient counts before sending.
 - Mailchimp contact tags segment contacts by event; Convex is the authoritative
   roster.
 
@@ -122,7 +125,10 @@ supported by real Forge photography.
 - Mailchimp Marketing API for general newsletter contacts and event tags.
 - Mailchimp Transactional for confirmations, reminders, waitlist offers, and
   admin logistical messages.
-- SMS is feature-flagged until the Mailchimp account has approved SMS services.
+- Twilio Messaging Services for registration-open alerts, waitlist offers,
+  reminders, and admin-composed logistical SMS.
+- SMS remains feature-flagged until Twilio credentials, sender registration,
+  consent language, and delivery-status callbacks are configured.
 
 ## Data handling and safety
 

@@ -93,6 +93,10 @@ export default defineSchema({
     managementTokenHash: v.string(),
     waiverVersion: v.string(),
     waiverAcceptedAt: v.number(),
+    emailNotificationsEnabled: v.boolean(),
+    smsNotificationsEnabled: v.boolean(),
+    smsConsentVersion: v.optional(v.string()),
+    smsConsentAcceptedAt: v.optional(v.number()),
     confirmationSentAt: v.optional(v.number()),
     reminderWeekSentAt: v.optional(v.number()),
     reminderDayOfSentAt: v.optional(v.number()),
@@ -128,13 +132,22 @@ export default defineSchema({
 
   eventNotifications: defineTable({
     eventId: v.id("events"),
+    kind: v.union(v.literal("registration_open"), v.literal("waitlist")),
+    parentName: v.string(),
     normalizedEmail: v.string(),
     email: v.string(),
-    notifiedAt: v.optional(v.number()),
+    mobilePhone: v.string(),
+    emailEnabled: v.boolean(),
+    smsEnabled: v.boolean(),
+    smsConsentVersion: v.optional(v.string()),
+    smsConsentAcceptedAt: v.optional(v.number()),
+    emailNotifiedAt: v.optional(v.number()),
+    smsNotifiedAt: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index("by_event", ["eventId"])
-    .index("by_event_and_email", ["eventId", "normalizedEmail"]),
+    .index("by_event_and_email", ["eventId", "normalizedEmail"])
+    .index("by_event_and_kind", ["eventId", "kind"]),
 
   adminMemberships: defineTable({
     authUserId: v.string(),
@@ -197,6 +210,7 @@ export default defineSchema({
     householdId: v.optional(v.id("households")),
     registrationId: v.optional(v.id("registrations")),
     channel: v.union(v.literal("email"), v.literal("sms")),
+    provider: v.union(v.literal("mailchimp"), v.literal("twilio")),
     kind: v.union(
       v.literal("confirmation"),
       v.literal("week_reminder"),
@@ -207,6 +221,17 @@ export default defineSchema({
       v.literal("volunteer_notification"),
     ),
     providerMessageId: v.optional(v.string()),
+    audience: v.optional(
+      v.union(
+        v.literal("registered"),
+        v.literal("waitlisted"),
+        v.literal("all_event_families"),
+      ),
+    ),
+    subject: v.optional(v.string()),
+    body: v.string(),
+    recipientCount: v.optional(v.number()),
+    createdByAuthUserId: v.optional(v.string()),
     status: v.union(
       v.literal("queued"),
       v.literal("sent"),

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { roster } from "../../../data";
 import { AdminHeader } from "../../components";
+import { CommunicationComposer } from "./communication-composer";
 
 export const metadata: Metadata = { title: "Event Roster — Forge Admin" };
 
@@ -15,19 +16,21 @@ export default function AdminEventPage() {
         <div style={{ height: 26 }} />
         <div className="admin-title">
           <div>
-            <p className="eyebrow">July 18, 2026 · Completed</p>
-            <h1>The Forge — July 18</h1>
-            <p>OneLife Fitness Princess Anne · 3:00–6:00 PM</p>
+            <p className="eyebrow">September 12, 2026 · Upcoming</p>
+            <h1>The Forge — September 12</h1>
+            <p>Virginia Beach · 3:00–6:00 PM Eastern</p>
           </div>
-          <button className="button button--red" type="button">Email families</button>
+          <Link className="button button--red" href="#message-families">Message families</Link>
         </div>
 
         <section className="metric-grid">
-          <div className="metric metric--red"><span>Checked in</span><strong>{checkedIn} / {roster.length}</strong></div>
-          <div className="metric"><span>Registered</span><strong>30</strong></div>
-          <div className="metric"><span>Cancelled</span><strong>4</strong></div>
-          <div className="metric"><span>Attendance</span><strong>73%</strong></div>
+          <div className="metric metric--red"><span>Registered</span><strong>24 / 30</strong></div>
+          <div className="metric"><span>SMS opted in</span><strong>21</strong></div>
+          <div className="metric"><span>Waitlisted</span><strong>4</strong></div>
+          <div className="metric"><span>Checked in</span><strong>{checkedIn} / {roster.length}</strong></div>
         </section>
+
+        <CommunicationComposer />
 
         <section className="table-card">
           <div className="table-card__header roster-toolbar">
