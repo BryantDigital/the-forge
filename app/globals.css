@@ -58,6 +58,7 @@ p {
 h1,
 h2,
 h3 {
+  margin-bottom: 0;
   font-family: var(--font-display), Impact, sans-serif;
   line-height: 0.98;
   text-transform: uppercase;
@@ -85,6 +86,10 @@ h3 {
 
 .section {
   padding: 112px 0;
+}
+
+.section--interior {
+  padding: 96px 0 110px;
 }
 
 .section--dark {
@@ -195,7 +200,6 @@ h3 {
 
 .site-header__brand img {
   width: 225px;
-  filter: brightness(0) invert(1);
 }
 
 .site-nav {
@@ -670,7 +674,6 @@ blockquote cite {
 .site-footer__logo {
   width: 220px;
   margin-bottom: 20px;
-  filter: brightness(0) invert(1);
 }
 
 .site-footer__grid > div:first-child p {
@@ -733,7 +736,7 @@ blockquote cite {
 .panel {
   border: 1px solid #d8d3cb;
   background: var(--white);
-  padding: 30px;
+  padding: 34px;
 }
 
 .panel h3 {
@@ -769,7 +772,7 @@ blockquote cite {
 
 .field {
   display: grid;
-  gap: 6px;
+  gap: 7px;
 }
 
 .field--full {
@@ -787,6 +790,12 @@ blockquote cite {
 .field textarea {
   min-height: 130px;
   padding-top: 12px;
+}
+
+.field small {
+  color: var(--smoke);
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .checkbox-row {
@@ -828,6 +837,174 @@ blockquote cite {
   color: var(--red);
 }
 
+.volunteer-layout {
+  align-items: start;
+}
+
+.form-section + .form-section {
+  margin-top: 78px;
+  border-top: 1px solid #d3cec5;
+  padding-top: 72px;
+}
+
+.form-section h2 {
+  max-width: 760px;
+  margin-bottom: 24px;
+}
+
+.volunteer-lede {
+  max-width: 720px;
+  margin-bottom: 36px;
+  font-weight: 500;
+}
+
+.volunteer-intro {
+  max-width: 740px;
+  margin-bottom: 34px;
+  color: #44413c;
+  font-size: 1.08rem;
+}
+
+.volunteer-role-list {
+  display: grid;
+  gap: 16px;
+}
+
+.volunteer-role-card {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid #d1ccc3;
+  background: var(--white);
+  grid-template-columns: minmax(0, 1fr) 150px;
+  cursor: pointer;
+  transition: 160ms ease;
+}
+
+.volunteer-role-card:hover {
+  border-color: #aaa39a;
+  box-shadow: 0 12px 35px rgba(27, 23, 18, 0.08);
+  transform: translateY(-2px);
+}
+
+.volunteer-role-card > div {
+  padding: 26px 28px;
+}
+
+.volunteer-role-card h3 {
+  margin-bottom: 16px;
+  font-size: 1.7rem;
+}
+
+.volunteer-role-card p {
+  margin-bottom: 10px;
+  color: #55514b;
+  font-size: 0.94rem;
+  line-height: 1.48;
+}
+
+.volunteer-role-card p:last-child {
+  margin-bottom: 0;
+}
+
+.volunteer-role-card strong {
+  color: var(--ink);
+}
+
+.volunteer-role-card__choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-left: 1px solid #d1ccc3;
+  background: #ece8e0;
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.volunteer-role-card__choice input {
+  width: 21px;
+  height: 21px;
+  accent-color: var(--red);
+}
+
+.faith-list {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid #d1ccc3;
+  background: var(--white);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.faith-item {
+  min-height: 220px;
+  border-right: 1px solid #d1ccc3;
+  border-bottom: 1px solid #d1ccc3;
+  padding: 28px;
+}
+
+.faith-item:nth-child(even) {
+  border-right: 0;
+}
+
+.faith-item:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.faith-item h3 {
+  margin-bottom: 12px;
+  color: var(--red);
+  font-size: 1.4rem;
+}
+
+.faith-item p {
+  margin-bottom: 18px;
+  color: #44413c;
+}
+
+.faith-item small {
+  color: var(--smoke);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.affirmation {
+  margin-top: 22px;
+  border: 1px solid #c9c3ba;
+  background: #e9e4dc;
+  padding: 20px;
+  font-weight: 700;
+}
+
+.submit-button {
+  width: 100%;
+  margin-top: 22px;
+}
+
+.volunteer-aside {
+  position: sticky;
+  top: 24px;
+}
+
+.aside-note {
+  margin-top: 28px;
+  border-top: 1px solid #e1ddd6;
+  padding-top: 24px;
+}
+
+.aside-note h3 {
+  margin-bottom: 10px;
+}
+
+.aside-note p {
+  margin-bottom: 0;
+  color: var(--smoke);
+  font-size: 0.93rem;
+}
+
 .admin-shell {
   min-height: 100vh;
   background: #f0efec;
@@ -847,7 +1024,6 @@ blockquote cite {
 
 .admin-header img {
   width: 190px;
-  filter: brightness(0) invert(1);
 }
 
 .admin-nav {
@@ -1063,6 +1239,14 @@ td {
     padding: 11px 4px;
   }
 
+  .mobile-menu nav .mobile-menu__donate {
+    margin-top: 8px;
+    border: 0;
+    background: var(--red);
+    padding: 12px;
+    text-align: center;
+  }
+
   .split,
   .newsletter__inner,
   .content-grid,
@@ -1109,6 +1293,10 @@ td {
     padding: 78px 0;
   }
 
+  .section--interior {
+    padding: 72px 0 88px;
+  }
+
   .site-header__inner {
     height: 76px;
   }
@@ -1118,12 +1306,13 @@ td {
   }
 
   .hero {
-    min-height: 760px;
+    min-height: 930px;
   }
 
   .hero__content {
-    min-height: 700px;
-    padding-top: 110px;
+    min-height: 870px;
+    padding-top: 112px;
+    padding-bottom: 115px;
   }
 
   .hero__crest {
@@ -1210,6 +1399,55 @@ td {
 
   .site-footer__bottom {
     flex-direction: column;
+  }
+
+  .interior-header {
+    padding: 146px 0 62px;
+  }
+
+  .panel {
+    padding: 24px 20px;
+  }
+
+  .form-section + .form-section {
+    margin-top: 58px;
+    padding-top: 52px;
+  }
+
+  .volunteer-role-card {
+    grid-template-columns: 1fr;
+  }
+
+  .volunteer-role-card > div {
+    padding: 23px 20px;
+  }
+
+  .volunteer-role-card__choice {
+    justify-content: flex-start;
+    border-top: 1px solid #d1ccc3;
+    border-left: 0;
+    padding: 17px 20px;
+  }
+
+  .faith-list {
+    grid-template-columns: 1fr;
+  }
+
+  .faith-item,
+  .faith-item:nth-child(even),
+  .faith-item:nth-last-child(-n + 2) {
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid #d1ccc3;
+    padding: 24px 20px;
+  }
+
+  .faith-item:last-child {
+    border-bottom: 0;
+  }
+
+  .volunteer-aside {
+    position: static;
   }
 
   .admin-nav {

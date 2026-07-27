@@ -20,7 +20,7 @@ export default function EventDetailPage() {
             <p>{event.time} · {event.location}</p>
           </div>
         </header>
-        <section className="section">
+        <section className="section section--interior">
           <div className="shell content-grid">
             <article>
               <SectionEyebrow>About this event</SectionEyebrow>

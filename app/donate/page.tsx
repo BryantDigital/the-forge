@@ -18,7 +18,7 @@ export default function DonatePage() {
             </p>
           </div>
         </header>
-        <section className="section">
+        <section className="section section--interior">
           <div className="shell content-grid">
             <article>
               <SectionEyebrow>100% secure giving</SectionEyebrow>

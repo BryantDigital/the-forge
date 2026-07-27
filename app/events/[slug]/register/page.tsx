@@ -15,7 +15,7 @@ export default function RegisterPage() {
             <p>The Forge — September 12 · 3:00–6:00 PM Eastern</p>
           </div>
         </header>
-        <section className="section">
+        <section className="section section--interior">
           <form className="shell content-grid">
             <div>
               <SectionEyebrow>Parent or guardian</SectionEyebrow>

@@ -14,7 +14,7 @@ export default function WaiverPage() {
             <h1>Terms & waiver</h1>
           </div>
         </header>
-        <section className="section">
+        <section className="section section--interior">
           <article className="shell" style={{ maxWidth: 820 }}>
             <h2 style={{ fontSize: "2.8rem" }}>Participation waiver</h2>
             <p>

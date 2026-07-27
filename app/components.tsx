@@ -6,24 +6,23 @@ export function ForgeHeader() {
     <header className="site-header">
       <div className="shell site-header__inner">
         <Link className="site-header__brand" href="/" aria-label="The Forge home">
-          <img src="/images/forge-logo.png" alt="The Forge" />
+          <img src="/images/forge-logo-white.png" alt="The Forge" />
         </Link>
         <nav className="site-nav" aria-label="Main navigation">
           <Link href="/events">Events</Link>
           <Link href="/volunteer">Volunteer</Link>
-          <Link href="/donate">Donate</Link>
-          <Link href="/account">My Forge</Link>
+          <Link href="/account">Login / Sign up</Link>
         </nav>
-        <Link className="button button--red button--small site-header__cta" href="/events">
-          Find an event
+        <Link className="button button--red button--small site-header__cta" href="/donate">
+          Donate
         </Link>
         <details className="mobile-menu">
           <summary aria-label="Open menu">Menu</summary>
           <nav>
             <Link href="/events">Events</Link>
             <Link href="/volunteer">Volunteer</Link>
-            <Link href="/donate">Donate</Link>
-            <Link href="/account">My Forge</Link>
+            <Link href="/account">Login / Sign up</Link>
+            <Link className="mobile-menu__donate" href="/donate">Donate</Link>
           </nav>
         </details>
       </div>
@@ -36,7 +35,7 @@ export function ForgeFooter() {
     <footer className="site-footer">
       <div className="shell site-footer__grid">
         <div>
-          <img className="site-footer__logo" src="/images/forge-logo.png" alt="The Forge" />
+          <img className="site-footer__logo" src="/images/forge-logo-white.png" alt="The Forge" />
           <p>Building boys into faithful men through faith, fitness, fellowship, and fun.</p>
         </div>
         <div>

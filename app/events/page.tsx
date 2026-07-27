@@ -22,7 +22,7 @@ export default function EventsPage() {
             </p>
           </div>
         </header>
-        <section className="section">
+        <section className="section section--interior">
           <div className="shell">
             <div className="event-grid">
               {upcomingEvents.map((event) => (

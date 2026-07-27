@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ForgeFooter, ForgeHeader, SectionEyebrow } from "../components";
 
-export const metadata: Metadata = { title: "My Forge" };
+export const metadata: Metadata = { title: "Login / Sign up" };
 
 export default function AccountPage() {
   return (
@@ -11,12 +11,12 @@ export default function AccountPage() {
       <main>
         <header className="interior-header">
           <div className="shell">
-            <SectionEyebrow>My Forge</SectionEyebrow>
+            <SectionEyebrow>Login / Sign up</SectionEyebrow>
             <h1>Your family. One place.</h1>
             <p>Access saved children, upcoming registrations, event history, and giving.</p>
           </div>
         </header>
-        <section className="section">
+        <section className="section section--interior">
           <div className="shell" style={{ maxWidth: 700 }}>
             <div className="panel">
               <h2 style={{ fontSize: "2.7rem" }}>Email me a secure sign-in link.</h2>
