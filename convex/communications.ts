@@ -39,7 +39,10 @@ export const getProviderStatus = query({
         process.env.SMS_ENABLED === "true" &&
         Boolean(process.env.TWILIO_ACCOUNT_SID) &&
         Boolean(process.env.TWILIO_AUTH_TOKEN) &&
-        Boolean(process.env.TWILIO_MESSAGING_SERVICE_SID),
+        Boolean(
+          process.env.TWILIO_MESSAGING_SERVICE_SID ||
+            process.env.TWILIO_FROM_PHONE_NUMBER,
+        ),
     };
   },
 });
@@ -679,11 +682,20 @@ async function sendTwilioSms({ to, body }: { to: string; body: string }) {
   const accountSid = requiredEnv("TWILIO_ACCOUNT_SID");
   const authToken = requiredEnv("TWILIO_AUTH_TOKEN");
   const convexSiteUrl = requiredEnv("CONVEX_SITE_URL").replace(/\/$/, "");
+  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID?.trim();
+  const fromPhoneNumber = process.env.TWILIO_FROM_PHONE_NUMBER?.trim();
+  if (!messagingServiceSid && !fromPhoneNumber) {
+    throw new Error(
+      "Set either TWILIO_MESSAGING_SERVICE_SID or TWILIO_FROM_PHONE_NUMBER.",
+    );
+  }
   const params = new URLSearchParams({
     To: to,
-    MessagingServiceSid: requiredEnv("TWILIO_MESSAGING_SERVICE_SID"),
     Body: `${body.trim()}\n\nThe Forge · Reply STOP to opt out.`,
     StatusCallback: `${convexSiteUrl}/twilio/status`,
+    ...(messagingServiceSid
+      ? { MessagingServiceSid: messagingServiceSid }
+      : { From: fromPhoneNumber as string }),
   });
   const response = await fetch(
     `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
