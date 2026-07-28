@@ -58,3 +58,13 @@ test("server-renders the volunteer application workflow", async () => {
   assert.match(html, /Submit application/i);
   assert.match(html, /Accepted volunteers sign a simple agreement/i);
 });
+
+test("server-renders the family account entry point", async () => {
+  const response = await render("/account");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Your family\. One place\./i);
+  assert.match(html, /Access saved children, upcoming registrations, event history, and giving/i);
+  assert.match(html, /No login required/i);
+});

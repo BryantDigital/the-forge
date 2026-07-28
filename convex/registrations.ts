@@ -66,12 +66,20 @@ export const register = mutation({
       throw new ConvexError("This family request is larger than the event capacity.");
     }
 
-    let household = await ctx.db
-      .query("households")
+    const linkedMember = await ctx.db
+      .query("householdMembers")
       .withIndex("by_normalized_email", (range) =>
         range.eq("normalizedEmail", args.normalizedEmail),
       )
-      .unique();
+      .first();
+    let household = linkedMember
+      ? await ctx.db.get(linkedMember.householdId)
+      : await ctx.db
+          .query("households")
+          .withIndex("by_normalized_email", (range) =>
+            range.eq("normalizedEmail", args.normalizedEmail),
+          )
+          .first();
 
     const householdFields = {
       email: args.email,
@@ -87,7 +95,9 @@ export const register = mutation({
     if (household) {
       householdId = household._id;
       await ctx.db.patch(householdId, {
-        ...householdFields,
+        ...(household.normalizedEmail === args.normalizedEmail
+          ? householdFields
+          : { updatedAt: now }),
         generalEmailOptInAt: args.generalEmailOptInAt ?? household.generalEmailOptInAt,
         smsOptInAt: args.smsConsentAcceptedAt ?? household.smsOptInAt,
         smsConsentVersion: args.smsConsentVersion ?? household.smsConsentVersion,
@@ -292,20 +302,86 @@ export const connectMyHousehold = mutation({
   handler: async (ctx) => {
     const user = await authComponent.getAuthUser(ctx);
     const authUserId = user.userId ?? user._id;
-    const household = await ctx.db
+    const normalizedEmail = user.email.trim().toLowerCase();
+    const byAuthUser = await ctx.db
+      .query("householdMembers")
+      .withIndex("by_auth_user", (range) => range.eq("authUserId", authUserId))
+      .first();
+    const existingMember =
+      byAuthUser ??
+      (await ctx.db
+        .query("householdMembers")
+        .withIndex("by_normalized_email", (range) =>
+          range.eq("normalizedEmail", normalizedEmail),
+        )
+        .first());
+
+    if (existingMember) {
+      const household = await ctx.db.get(existingMember.householdId);
+      if (!household) return { connected: false };
+      const now = Date.now();
+      if (
+        existingMember.authUserId !== authUserId ||
+        existingMember.status !== "active"
+      ) {
+        await ctx.db.patch(existingMember._id, {
+          authUserId,
+          displayName:
+            user.name?.trim() ||
+            (existingMember.role === "primary"
+              ? `${household.parentFirstName} ${household.parentLastName}`
+              : existingMember.displayName),
+          status: "active",
+          joinedAt: existingMember.joinedAt ?? now,
+          updatedAt: now,
+        });
+        await ctx.db.insert("auditLogs", {
+          actorAuthUserId: authUserId,
+          actorEmail: user.email,
+          action: "household.invitation_accepted",
+          entityType: "household",
+          entityId: household._id,
+          summary: `${user.email} joined the family account`,
+          createdAt: now,
+        });
+      }
+      return { connected: true, householdId: household._id };
+    }
+
+    const household =
+      (await ctx.db
+        .query("households")
+        .withIndex("by_auth_user", (range) => range.eq("authUserId", authUserId))
+        .first()) ??
+      (await ctx.db
       .query("households")
       .withIndex("by_normalized_email", (range) =>
-        range.eq("normalizedEmail", user.email.toLowerCase()),
+          range.eq("normalizedEmail", normalizedEmail),
       )
-      .unique();
+        .first());
 
     if (!household) return { connected: false };
+    const now = Date.now();
     if (household.authUserId !== authUserId) {
       await ctx.db.patch(household._id, {
         authUserId,
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
     }
+    await ctx.db.insert("householdMembers", {
+      householdId: household._id,
+      normalizedEmail,
+      email: user.email.trim(),
+      displayName:
+        user.name?.trim() ||
+        `${household.parentFirstName} ${household.parentLastName}`,
+      role: "primary",
+      status: "active",
+      authUserId,
+      joinedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
     return { connected: true, householdId: household._id };
   },
 });
@@ -316,7 +392,7 @@ export const getMyAccount = query({
     const identity = await getHouseholdIdentity(ctx);
     if (!identity) return null;
 
-    const [registrations, savedChildren] = await Promise.all([
+    const [registrations, savedChildren, storedMembers] = await Promise.all([
       ctx.db
         .query("registrations")
         .withIndex("by_household", (range) =>
@@ -325,6 +401,12 @@ export const getMyAccount = query({
         .collect(),
       ctx.db
         .query("children")
+        .withIndex("by_household", (range) =>
+          range.eq("householdId", identity.household._id),
+        )
+        .collect(),
+      ctx.db
+        .query("householdMembers")
         .withIndex("by_household", (range) =>
           range.eq("householdId", identity.household._id),
         )
@@ -378,6 +460,29 @@ export const getMyAccount = query({
         emergencyContactName: identity.household.emergencyContactName,
         emergencyContactPhone: identity.household.emergencyContactPhone,
       },
+      members:
+        storedMembers.length > 0
+          ? storedMembers
+              .sort((a, b) => {
+                if (a.role !== b.role) return a.role === "primary" ? -1 : 1;
+                return a.createdAt - b.createdAt;
+              })
+              .map((member) => ({
+                id: member._id,
+                displayName: member.displayName,
+                email: member.email,
+                role: member.role,
+                status: member.status,
+              }))
+          : [
+              {
+                id: identity.household._id,
+                displayName: `${identity.household.parentFirstName} ${identity.household.parentLastName}`,
+                email: identity.household.email,
+                role: "primary" as const,
+                status: "active" as const,
+              },
+            ],
       savedChildren: savedChildren
         .filter((child) => !child.archivedAt)
         .map((child) => ({
@@ -948,10 +1053,27 @@ async function getHouseholdIdentity(ctx: QueryCtx | MutationCtx) {
   const user = await authComponent.safeGetAuthUser(ctx);
   if (!user) return null;
   const authUserId = user.userId ?? user._id;
+  const memberByAuthUser = await ctx.db
+    .query("householdMembers")
+    .withIndex("by_auth_user", (range) => range.eq("authUserId", authUserId))
+    .first();
+  const member =
+    memberByAuthUser ??
+    (await ctx.db
+      .query("householdMembers")
+      .withIndex("by_normalized_email", (range) =>
+        range.eq("normalizedEmail", user.email.trim().toLowerCase()),
+      )
+      .first());
+  if (member) {
+    const household = await ctx.db.get(member.householdId);
+    if (household) return { user, household, member };
+  }
+
   const byAuthUser = await ctx.db
     .query("households")
     .withIndex("by_auth_user", (range) => range.eq("authUserId", authUserId))
-    .unique();
+    .first();
   if (byAuthUser) return { user, household: byAuthUser };
 
   const byEmail = await ctx.db
@@ -959,7 +1081,7 @@ async function getHouseholdIdentity(ctx: QueryCtx | MutationCtx) {
     .withIndex("by_normalized_email", (range) =>
       range.eq("normalizedEmail", user.email.toLowerCase()),
     )
-    .unique();
+    .first();
   return byEmail ? { user, household: byEmail } : null;
 }
 

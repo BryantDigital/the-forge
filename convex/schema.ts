@@ -40,6 +40,24 @@ export default defineSchema({
     .index("by_normalized_email", ["normalizedEmail"])
     .index("by_auth_user", ["authUserId"]),
 
+  householdMembers: defineTable({
+    householdId: v.id("households"),
+    normalizedEmail: v.string(),
+    email: v.string(),
+    displayName: v.string(),
+    role: v.union(v.literal("primary"), v.literal("adult")),
+    status: v.union(v.literal("invited"), v.literal("active")),
+    authUserId: v.optional(v.string()),
+    invitedByAuthUserId: v.optional(v.string()),
+    invitedAt: v.optional(v.number()),
+    joinedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_household", ["householdId"])
+    .index("by_normalized_email", ["normalizedEmail"])
+    .index("by_auth_user", ["authUserId"]),
+
   children: defineTable({
     householdId: v.id("households"),
     firstName: v.string(),
@@ -321,6 +339,7 @@ export default defineSchema({
   })
     .index("by_stripe_subscription", ["stripeSubscriptionId"])
     .index("by_stripe_customer", ["stripeCustomerId"])
+    .index("by_household", ["householdId"])
     .index("by_normalized_email", ["normalizedEmail"]),
 
   stripeWebhookEvents: defineTable({

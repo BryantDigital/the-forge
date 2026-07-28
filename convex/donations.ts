@@ -137,26 +137,63 @@ export const getMyGiving = query({
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user?.email) return null;
     const normalizedEmail = user.email.toLowerCase();
+    const member = await ctx.db
+      .query("householdMembers")
+      .withIndex("by_normalized_email", (range) =>
+        range.eq("normalizedEmail", normalizedEmail),
+      )
+      .first();
+    const household =
+      member
+        ? await ctx.db.get(member.householdId)
+        : await ctx.db
+            .query("households")
+            .withIndex("by_normalized_email", (range) =>
+              range.eq("normalizedEmail", normalizedEmail),
+            )
+            .first();
+    const householdId = household?._id;
     const livemode = stripeLiveMode();
     const [customers, donations, subscriptions] = await Promise.all([
-      ctx.db
-        .query("stripeCustomers")
-        .withIndex("by_normalized_email", (range) =>
-          range.eq("normalizedEmail", normalizedEmail),
-        )
-        .collect(),
-      ctx.db
-        .query("donations")
-        .withIndex("by_normalized_email", (range) =>
-          range.eq("normalizedEmail", normalizedEmail),
-        )
-        .collect(),
-      ctx.db
-        .query("stripeSubscriptions")
-        .withIndex("by_normalized_email", (range) =>
-          range.eq("normalizedEmail", normalizedEmail),
-        )
-        .collect(),
+      householdId
+        ? ctx.db
+            .query("stripeCustomers")
+            .withIndex("by_household", (range) =>
+              range.eq("householdId", householdId),
+            )
+            .collect()
+        : ctx.db
+            .query("stripeCustomers")
+            .withIndex("by_normalized_email", (range) =>
+              range.eq("normalizedEmail", normalizedEmail),
+            )
+            .collect(),
+      householdId
+        ? ctx.db
+            .query("donations")
+            .withIndex("by_household", (range) =>
+              range.eq("householdId", householdId),
+            )
+            .collect()
+        : ctx.db
+            .query("donations")
+            .withIndex("by_normalized_email", (range) =>
+              range.eq("normalizedEmail", normalizedEmail),
+            )
+            .collect(),
+      householdId
+        ? ctx.db
+            .query("stripeSubscriptions")
+            .withIndex("by_household", (range) =>
+              range.eq("householdId", householdId),
+            )
+            .collect()
+        : ctx.db
+            .query("stripeSubscriptions")
+            .withIndex("by_normalized_email", (range) =>
+              range.eq("normalizedEmail", normalizedEmail),
+            )
+            .collect(),
     ]);
     const customer = customers.find(
       (item) => Boolean(item.livemode) === livemode,
@@ -566,6 +603,13 @@ async function recordDonation(
 }
 
 async function householdIdForEmail(ctx: MutationCtx, normalizedEmail: string) {
+  const member = await ctx.db
+    .query("householdMembers")
+    .withIndex("by_normalized_email", (range) =>
+      range.eq("normalizedEmail", normalizedEmail),
+    )
+    .first();
+  if (member) return member.householdId;
   const household = await ctx.db
     .query("households")
     .withIndex("by_normalized_email", (range) =>

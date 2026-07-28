@@ -99,6 +99,11 @@ Household data:
 - Guest registrations are associated to a normalized email/household.
 - When the parent later verifies that email, the household is connected to the
   authenticated account.
+- A household may have multiple adult members. Additional adults are invited by
+  email and receive access only after authenticating with that exact verified
+  email address.
+- Linked adults share household children, registrations, and household-level
+  giving history.
 - Authentication uses a six-digit email code, never a password.
 - Existing child data must never be revealed merely because someone typed the
   same email into a public form. Saved household data is shown only after the
@@ -200,6 +205,8 @@ standard Next.js build. Both paths have been used during development.
 - `app/account/page.tsx` — sign-in/account shell.
 - `app/account/auth-card.tsx` — passwordless sign-in and account composition.
 - `app/account/account-dashboard.tsx` — household event list.
+- `app/account/household-manager.tsx` — household onboarding, family overview,
+  reusable child add/edit, member status, and spouse/co-parent invitations.
 - `app/account/registrations/[registrationId]/...` — authenticated reservation
   management.
 - `app/account/giving-history.tsx` — giving and recurring gift display.
@@ -255,6 +262,8 @@ standard Next.js build. Both paths have been used during development.
   presentation, rosters, and check-in.
 - `convex/registrations.ts` — household/child registration domain, account
   association, cancellations, waitlist, offers, and registration emails.
+- `convex/households.ts` — family onboarding, reusable child management,
+  verified-email adult invitations, and branded invitation delivery.
 - `convex/communications.ts` — audiences, queueing, SendGrid/Twilio delivery,
   reminder scheduling, delivery history, and SMS suppression.
 - `convex/eventNotifications.ts` — public event-alert subscriptions.
@@ -303,10 +312,11 @@ The complete schema is in `convex/schema.ts`. The relationship model is:
 
 ```text
 Better Auth user
-  ├── may connect to one household by verified normalized email
+  ├── may join one household through a householdMember
   └── may have one adminMembership
 
 household
+  ├── many adult householdMembers
   ├── many saved children
   ├── many event registrations
   ├── many communication deliveries
@@ -331,7 +341,8 @@ Stripe customer
 
 ### `households`
 
-One private family/contact record keyed by normalized email.
+One private family/contact record. The original primary contact email remains
+the legacy guest-association key and the household-level operational contact.
 
 Important fields:
 
@@ -344,10 +355,29 @@ Important fields:
 `normalizedEmail` is the guest-to-account association key. Do not expose data
 based only on an unverified email entry.
 
+### `householdMembers`
+
+Maps one or more verified adult email identities to a household.
+
+Important behavior:
+
+- `primary` is the original household contact and `adult` is an invited spouse
+  or co-parent;
+- status is `invited` or `active`;
+- an invitation does not expose household data publicly;
+- access begins when Better Auth verifies the exact member email;
+- `connectMyHousehold` transparently backfills a primary membership for legacy
+  single-user households;
+- a member email cannot be attached to two households through normal
+  application flows;
+- if an invited email is already the primary key for another household, the
+  automatic link is blocked rather than merging minor data without review.
+
 ### `children`
 
 Reusable household child profiles. Allergies and notes are per child. A child
-can be archived instead of destroyed.
+can be archived instead of destroyed. Account edits update this reusable
+profile only; `registrationChildren` snapshots remain stable.
 
 ### `events`
 
@@ -799,7 +829,7 @@ Next build as well catches Vercel-specific issues.
 At the time of this handoff:
 
 - TypeScript passes;
-- 15 tests pass;
+- 16 tests pass;
 - both Vinext and Next production builds pass;
 - ESLint has warnings but no errors.
 
@@ -881,6 +911,11 @@ Verified or implemented:
 - full-family waitlist and 24-hour offers;
 - guest secure management links;
 - authenticated parent reservation management;
+- full-width family dashboard with household and emergency-contact summary;
+- account-first household onboarding for parents without a prior RSVP;
+- reusable child profile creation and editing outside an event;
+- verified-email spouse/co-parent invitations and shared adult access;
+- shared household registrations and household-level giving visibility;
 - partial cancellation and adding/editing children;
 - parent roster;
 - child-only check-in roster;
@@ -911,6 +946,16 @@ Verified or implemented:
 ## 19. Known incomplete, placeholder, or launch-blocking work
 
 This section is especially important. Do not infer completion from polished UI.
+
+### Family accounts
+
+- Adults can invite or resend an invitation to a spouse/co-parent, but there is
+  not yet a self-service remove-member control.
+- Automatic household merging is intentionally not implemented. If an invited
+  email is already the primary contact for a different household, Forge staff
+  must review the records before a future merge tool moves minor data.
+- The reusable child editor does not alter historical or already-created event
+  roster snapshots.
 
 ### Volunteer system
 

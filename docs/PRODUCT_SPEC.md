@@ -36,11 +36,19 @@ supported by real Forge photography.
   notes.
 - Ages 9–16 are informational and are not enforced.
 - A parent does not need an account or password to register.
-- Normalized email associates guest activity to one private household record.
+- Normalized verified email associates guest activity and adult members to one
+  private household record.
 - Confirmation email contains a signed, expiring management link.
 - Secure links allow adding children, editing information, cancelling an
   individual child, or cancelling the entire reservation.
 - Authenticated parents can reuse saved household and child details.
+- Parents can create and update reusable child profiles independently of an
+  event registration.
+- A parent can invite a spouse or co-parent by email. After that adult verifies
+  the exact invited email through passwordless login, both adults share the
+  household, children, registrations, and household giving history.
+- Editing a reusable child profile affects future registrations; historical
+  event snapshots and rosters remain unchanged.
 - Existing children are never exposed solely because an email was entered;
   verified email authentication is required.
 

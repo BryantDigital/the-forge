@@ -30,7 +30,7 @@ export function AuthCard() {
 
   if (session?.user) {
     return (
-      <div className="panel account-auth-card">
+      <div className="panel account-auth-card account-auth-card--signed-in">
         <p className="eyebrow">Signed in</p>
         <h2>Welcome back, {session.user.name || "Forge family"}.</h2>
         <p>{session.user.email}</p>
@@ -41,8 +41,8 @@ export function AuthCard() {
         <div className="account-access-grid">
           <div>
             <span>Family account</span>
-            <strong>Connected</strong>
-            <p>Saved children, registrations, and giving history will appear here.</p>
+            <strong>Shared household</strong>
+            <p>Your linked parents, children, registrations, and giving history live here.</p>
           </div>
           <div>
             <span>Forge administration</span>

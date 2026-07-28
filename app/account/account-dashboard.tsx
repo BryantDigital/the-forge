@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { api } from "../../convex/_generated/api";
+import { HouseholdManager, HouseholdSetup } from "./household-manager";
 
 export function AccountDashboard() {
   const account = useQuery(api.registrations.getMyAccount);
@@ -31,17 +32,7 @@ export function AccountDashboard() {
 
   if (!account) {
     return (
-      <section className="account-registrations account-registrations--empty">
-        <p className="eyebrow">Family registrations</p>
-        <h3>No reservations connected yet.</h3>
-        <p>
-          Register with this same email address and the event will automatically
-          appear here.
-        </p>
-        <Link className="button button--red" href="/events">
-          Find an event <span aria-hidden="true">→</span>
-        </Link>
-      </section>
+      <HouseholdSetup />
     );
   }
 
@@ -53,42 +44,45 @@ export function AccountDashboard() {
   );
 
   return (
-    <section className="account-registrations">
-      <div className="account-section-heading">
-        <div>
-          <p className="eyebrow">Upcoming events</p>
-          <h3>Your family’s next steps.</h3>
+    <>
+      <HouseholdManager account={account} />
+      <section className="account-registrations">
+        <div className="account-section-heading">
+          <div>
+            <p className="eyebrow">Upcoming events</p>
+            <h3>Your family’s next steps.</h3>
+          </div>
+          <Link className="text-link" href="/events">
+            Browse events →
+          </Link>
         </div>
-        <Link className="text-link" href="/events">
-          Browse events →
-        </Link>
-      </div>
 
-      {upcoming.length > 0 ? (
-        <div className="account-event-list">
-          {upcoming.map((registration) => (
-            <RegistrationCard key={registration.id} registration={registration} />
-          ))}
-        </div>
-      ) : (
-        <div className="account-empty-state">
-          <strong>No upcoming reservations.</strong>
-          <p>When you register with {account.household.email}, the event will show here.</p>
-          <Link className="text-link" href="/events">See upcoming events →</Link>
-        </div>
-      )}
-
-      {history.length > 0 && (
-        <details className="account-history">
-          <summary>Past and cancelled events ({history.length})</summary>
+        {upcoming.length > 0 ? (
           <div className="account-event-list">
-            {history.map((registration) => (
-              <RegistrationCard key={registration.id} registration={registration} compact />
+            {upcoming.map((registration) => (
+              <RegistrationCard key={registration.id} registration={registration} />
             ))}
           </div>
-        </details>
-      )}
-    </section>
+        ) : (
+          <div className="account-empty-state">
+            <strong>No upcoming reservations.</strong>
+            <p>When you register with {account.household.email}, the event will show here.</p>
+            <Link className="text-link" href="/events">See upcoming events →</Link>
+          </div>
+        )}
+
+        {history.length > 0 && (
+          <details className="account-history">
+            <summary>Past and cancelled events ({history.length})</summary>
+            <div className="account-event-list">
+              {history.map((registration) => (
+                <RegistrationCard key={registration.id} registration={registration} compact />
+              ))}
+            </div>
+          </details>
+        )}
+      </section>
+    </>
   );
 }
 

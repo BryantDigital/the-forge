@@ -15,6 +15,7 @@ import type * as crons from "../crons.js";
 import type * as donations from "../donations.js";
 import type * as eventNotifications from "../eventNotifications.js";
 import type * as events from "../events.js";
+import type * as households from "../households.js";
 import type * as http from "../http.js";
 import type * as registrations from "../registrations.js";
 import type * as volunteerAgreement from "../volunteerAgreement.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   donations: typeof donations;
   eventNotifications: typeof eventNotifications;
   events: typeof events;
+  households: typeof households;
   http: typeof http;
   registrations: typeof registrations;
   volunteerAgreement: typeof volunteerAgreement;
