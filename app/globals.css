@@ -3173,7 +3173,7 @@ blockquote cite {
   position: relative;
   display: flex;
   min-height: 230px;
-  grid-column: span 4;
+  grid-column: span 3;
   flex-direction: column;
   overflow: hidden;
   border-top: 5px solid var(--ink);

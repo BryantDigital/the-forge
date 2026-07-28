@@ -83,9 +83,9 @@ export default async function AdminPage() {
             eyebrow={`${summary.year} contributions`}
             label="Giving"
             value={currency(metrics.givingYtdInCents)}
-            detail={`${number(metrics.donorsYtd)} donors · ${number(
-              metrics.recurringDonors,
-            )} recurring`}
+            detail={`${number(metrics.donorsYtd)} ${
+              metrics.donorsYtd === 1 ? "donor" : "donors"
+            } · ${number(metrics.recurringDonors)} recurring`}
             comparison={comparison(
               metrics.givingYtdInCents,
               metrics.givingPreviousYtdInCents,
