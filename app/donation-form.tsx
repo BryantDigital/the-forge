@@ -1,9 +1,12 @@
 "use client";
 
+import { useAction } from "convex/react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
+import { api } from "../convex/_generated/api";
 
 const frequencies = [
-  { value: "once", label: "One time", suffix: "" },
+  { value: "one_time", label: "One time", suffix: "" },
   { value: "monthly", label: "Monthly", suffix: "/ month" },
   { value: "quarterly", label: "Quarterly", suffix: "/ quarter" },
   { value: "annually", label: "Annually", suffix: "/ year" },
@@ -11,10 +14,22 @@ const frequencies = [
 
 const presetAmounts = [10, 25, 50, 100, 250, 500];
 
-export function DonationForm() {
+export function DonationForm({
+  checkoutComplete = false,
+  checkoutCancelled = false,
+}: {
+  checkoutComplete?: boolean;
+  checkoutCancelled?: boolean;
+}) {
+  const createCheckoutSession = useAction(api.donations.createCheckoutSession);
   const [frequency, setFrequency] = useState<(typeof frequencies)[number]["value"]>("monthly");
   const [amount, setAmount] = useState<number | "custom">(50);
   const [customAmount, setCustomAmount] = useState("");
+  const [status, setStatus] = useState<
+    { type: "idle" } |
+    { type: "submitting" } |
+    { type: "error"; message: string }
+  >({ type: "idle" });
 
   const selectedFrequency = frequencies.find((item) => item.value === frequency) ?? frequencies[1];
   const displayAmount = amount === "custom" ? Number(customAmount || 0) : amount;
@@ -22,6 +37,28 @@ export function DonationForm() {
     () => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(displayAmount),
     [displayAmount],
   );
+
+  if (checkoutComplete) {
+    return (
+      <aside className="donation-card donation-complete" data-reveal>
+        <div className="donation-complete__mark" aria-hidden="true">✓</div>
+        <p className="donation-card__eyebrow">Thank you</p>
+        <h3>Your generosity strengthens the mission.</h3>
+        <p>
+          Stripe is processing your gift and will email your receipt. Bank gifts
+          can take several business days to finish.
+        </p>
+        <div className="registration-success__actions">
+          <Link className="button button--red" href="/account">
+            View your Forge account
+          </Link>
+          <Link className="button button--dark" href="/">
+            Return home
+          </Link>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className="donation-card" data-reveal>
@@ -35,8 +72,37 @@ export function DonationForm() {
 
       <form
         className="donation-form"
-        onSubmit={(event) => event.preventDefault()}
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setStatus({ type: "submitting" });
+          const form = new FormData(event.currentTarget);
+          const amountInDollars =
+            amount === "custom" ? Number(customAmount) : amount;
+          try {
+            const result = await createCheckoutSession({
+              firstName: String(form.get("firstName") ?? ""),
+              lastName: String(form.get("lastName") ?? ""),
+              email: String(form.get("email") ?? ""),
+              amountInCents: Math.round(amountInDollars * 100),
+              frequency,
+            });
+            window.location.assign(result.url);
+          } catch (error) {
+            setStatus({
+              type: "error",
+              message:
+                error instanceof Error
+                  ? cleanConvexError(error.message)
+                  : "Secure giving is temporarily unavailable.",
+            });
+          }
+        }}
       >
+        {checkoutCancelled && status.type === "idle" && (
+          <p className="donation-cancelled">
+            No gift was submitted. Your selections are ready whenever you are.
+          </p>
+        )}
         <fieldset className="donation-fieldset">
           <legend>Choose a frequency</legend>
           <div className="frequency-toggle">
@@ -119,8 +185,21 @@ export function DonationForm() {
           </label>
         </div>
 
-        <button className="button button--red donation-submit" type="submit">
-          Continue to secure giving <span aria-hidden="true">→</span>
+        {status.type === "error" && (
+          <p className="form-status form-status--error" role="alert">
+            {status.message}
+          </p>
+        )}
+
+        <button
+          className="button button--red donation-submit"
+          type="submit"
+          disabled={status.type === "submitting" || displayAmount < 1}
+        >
+          {status.type === "submitting"
+            ? "Opening secure checkout…"
+            : "Continue to secure giving"}{" "}
+          <span aria-hidden="true">→</span>
         </button>
       </form>
 
@@ -130,4 +209,8 @@ export function DonationForm() {
       </div>
     </aside>
   );
+}
+
+function cleanConvexError(message: string) {
+  return message.match(/Uncaught ConvexError:\s*([^\n]+)/)?.[1] ?? message;
 }

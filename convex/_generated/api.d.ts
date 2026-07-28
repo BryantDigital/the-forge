@@ -12,6 +12,7 @@ import type * as adminAuth from "../adminAuth.js";
 import type * as auth from "../auth.js";
 import type * as communications from "../communications.js";
 import type * as crons from "../crons.js";
+import type * as donations from "../donations.js";
 import type * as eventNotifications from "../eventNotifications.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   communications: typeof communications;
   crons: typeof crons;
+  donations: typeof donations;
   eventNotifications: typeof eventNotifications;
   events: typeof events;
   http: typeof http;

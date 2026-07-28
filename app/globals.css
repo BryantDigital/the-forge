@@ -1779,6 +1779,82 @@ blockquote cite {
   color: var(--smoke);
 }
 
+.account-giving {
+  margin-top: 38px;
+  border-top: 1px solid var(--line);
+  padding-top: 34px;
+}
+
+.account-giving__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.account-recurring-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.account-recurring-list article {
+  display: grid;
+  gap: 6px;
+  border-top: 3px solid var(--red);
+  background: var(--ink);
+  padding: 20px;
+  color: var(--white);
+}
+
+.account-recurring-list span,
+.account-recurring-list em {
+  color: #c9c4bc;
+  font-size: 0.76rem;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.account-recurring-list strong {
+  font: 700 1.7rem/1 var(--font-display);
+}
+
+.account-gift-list {
+  display: grid;
+  border: 1px solid var(--line);
+  background: var(--white);
+}
+
+.account-gift-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 17px 20px;
+}
+
+.account-gift-list article + article {
+  border-top: 1px solid var(--line);
+}
+
+.account-gift-list article > div {
+  display: grid;
+  gap: 3px;
+}
+
+.account-gift-list article strong {
+  font: 700 1.25rem/1 var(--font-display);
+}
+
+.account-gift-list article span,
+.account-gift-list__receipt {
+  color: var(--smoke);
+  font-size: 0.8rem;
+}
+
 .account-history {
   margin-top: 22px;
   border-top: 1px solid var(--line);
@@ -2407,6 +2483,47 @@ blockquote cite {
 .donation-card__trust strong {
   display: block;
   color: var(--ink);
+}
+
+.donation-complete {
+  align-self: start;
+  padding: clamp(32px, 6vw, 54px);
+  background:
+    radial-gradient(circle at 100% 0, rgba(184, 25, 33, 0.22), transparent 40%),
+    var(--ink);
+  color: var(--white);
+}
+
+.donation-complete__mark {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  background: var(--red);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.donation-complete h3 {
+  margin: 8px 0 18px;
+  font-size: clamp(2.25rem, 5vw, 3.6rem);
+}
+
+.donation-complete > p:not(.donation-card__eyebrow) {
+  color: #d3cec6;
+  line-height: 1.7;
+}
+
+.donation-cancelled {
+  margin: 0;
+  border-left: 3px solid var(--red);
+  background: #f2e9dd;
+  padding: 13px 15px;
+  color: #5d4531;
+  font-size: 0.86rem;
 }
 
 .volunteer-layout {
@@ -3230,6 +3347,10 @@ td {
     width: min(100%, 620px);
   }
 
+  .account-recurring-list {
+    grid-template-columns: 1fr;
+  }
+
   .event-promises__grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -3301,6 +3422,16 @@ td {
 
   .shell {
     width: min(100% - 28px, 1180px);
+  }
+
+  .account-giving__actions {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .account-gift-list article {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .section {

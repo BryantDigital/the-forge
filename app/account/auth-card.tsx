@@ -5,6 +5,7 @@ import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { authClient } from "../../lib/auth-client";
 import { AccountDashboard } from "./account-dashboard";
+import { GivingHistory } from "./giving-history";
 
 export function AuthCard() {
   const { data: session, isPending: sessionPending } = authClient.useSession();
@@ -35,6 +36,7 @@ export function AuthCard() {
         <p>{session.user.email}</p>
 
         <AccountDashboard />
+        <GivingHistory />
 
         <div className="account-access-grid">
           <div>

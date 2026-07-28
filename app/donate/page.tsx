@@ -5,7 +5,12 @@ import { HomeMotion } from "../home-motion";
 
 export const metadata: Metadata = { title: "Give" };
 
-export default function DonatePage() {
+export default async function DonatePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string; cancelled?: string }>;
+}) {
+  const params = await searchParams;
   return (
     <>
       <HomeMotion />
@@ -55,7 +60,10 @@ export default function DonatePage() {
                 </div>
               </div>
             </article>
-            <DonationForm />
+            <DonationForm
+              checkoutComplete={params.success === "true"}
+              checkoutCancelled={params.cancelled === "true"}
+            />
           </div>
         </section>
       </main>

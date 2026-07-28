@@ -191,9 +191,14 @@ export default defineSchema({
   donations: defineTable({
     householdId: v.optional(v.id("households")),
     normalizedEmail: v.string(),
+    donorFirstName: v.optional(v.string()),
+    donorLastName: v.optional(v.string()),
     stripeCustomerId: v.string(),
+    stripeCheckoutSessionId: v.optional(v.string()),
     stripePaymentIntentId: v.optional(v.string()),
     stripeSubscriptionId: v.optional(v.string()),
+    stripeInvoiceId: v.optional(v.string()),
+    receiptUrl: v.optional(v.string()),
     amountInCents: v.number(),
     currency: v.string(),
     frequency: v.union(
@@ -210,7 +215,51 @@ export default defineSchema({
     .index("by_household", ["householdId"])
     .index("by_normalized_email", ["normalizedEmail"])
     .index("by_stripe_customer", ["stripeCustomerId"])
-    .index("by_stripe_subscription", ["stripeSubscriptionId"]),
+    .index("by_stripe_subscription", ["stripeSubscriptionId"])
+    .index("by_checkout_session", ["stripeCheckoutSessionId"])
+    .index("by_stripe_invoice", ["stripeInvoiceId"]),
+
+  stripeCustomers: defineTable({
+    stripeCustomerId: v.string(),
+    householdId: v.optional(v.id("households")),
+    normalizedEmail: v.string(),
+    email: v.string(),
+    firstName: v.string(),
+    lastName: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_stripe_customer", ["stripeCustomerId"])
+    .index("by_normalized_email", ["normalizedEmail"])
+    .index("by_household", ["householdId"]),
+
+  stripeSubscriptions: defineTable({
+    stripeSubscriptionId: v.string(),
+    stripeCustomerId: v.string(),
+    householdId: v.optional(v.id("households")),
+    normalizedEmail: v.string(),
+    frequency: v.union(
+      v.literal("monthly"),
+      v.literal("quarterly"),
+      v.literal("annually"),
+    ),
+    amountInCents: v.number(),
+    currency: v.string(),
+    status: v.string(),
+    currentPeriodEnd: v.optional(v.number()),
+    cancelledAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_stripe_subscription", ["stripeSubscriptionId"])
+    .index("by_stripe_customer", ["stripeCustomerId"])
+    .index("by_normalized_email", ["normalizedEmail"]),
+
+  stripeWebhookEvents: defineTable({
+    stripeEventId: v.string(),
+    type: v.string(),
+    processedAt: v.number(),
+  }).index("by_stripe_event", ["stripeEventId"]),
 
   communications: defineTable({
     eventId: v.optional(v.id("events")),

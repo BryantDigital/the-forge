@@ -8,6 +8,31 @@ const http = httpRouter();
 authComponent.registerRoutes(http, createAuth);
 
 http.route({
+  path: "/stripe/webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const payload = await request.text();
+    const signature = request.headers.get("stripe-signature");
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (
+      !signature ||
+      !webhookSecret ||
+      !(await validStripeSignature(payload, signature, webhookSecret))
+    ) {
+      return new Response("Invalid Stripe signature", { status: 400 });
+    }
+    let event: unknown;
+    try {
+      event = JSON.parse(payload);
+    } catch {
+      return new Response("Invalid JSON", { status: 400 });
+    }
+    await ctx.runMutation(internal.donations.processStripeWebhook, { event });
+    return Response.json({ received: true });
+  }),
+});
+
+http.route({
   path: "/twilio/inbound",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
@@ -70,6 +95,44 @@ async function validTwilioRequest(request: Request, form: FormData) {
     Array.from(new Uint8Array(digest), (byte) => String.fromCharCode(byte)).join(""),
   );
   return constantTimeEqual(signature, expected);
+}
+
+async function validStripeSignature(
+  payload: string,
+  signatureHeader: string,
+  secret: string,
+) {
+  const parts = signatureHeader.split(",");
+  const timestamp = parts
+    .find((part) => part.startsWith("t="))
+    ?.slice(2);
+  const signatures = parts
+    .filter((part) => part.startsWith("v1="))
+    .map((part) => part.slice(3));
+  if (!timestamp || signatures.length === 0) return false;
+  const timestampSeconds = Number(timestamp);
+  if (
+    !Number.isFinite(timestampSeconds) ||
+    Math.abs(Date.now() / 1000 - timestampSeconds) > 300
+  ) {
+    return false;
+  }
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const digest = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(`${timestamp}.${payload}`),
+  );
+  const expected = Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  return signatures.some((signature) => constantTimeEqual(signature, expected));
 }
 
 function constantTimeEqual(left: string, right: string) {
