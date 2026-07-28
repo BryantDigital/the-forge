@@ -13,10 +13,24 @@ export const getViewer = query({
 
     const authUserId = user.userId ?? user._id;
     const ownerEmails = configuredOwnerEmails();
-    const membership = await ctx.db
-      .query("adminMemberships")
-      .withIndex("by_auth_user", (range) => range.eq("authUserId", authUserId))
-      .unique();
+    const [membership, volunteerMembership] = await Promise.all([
+      ctx.db
+        .query("adminMemberships")
+        .withIndex("by_auth_user", (range) => range.eq("authUserId", authUserId))
+        .unique(),
+      ctx.db
+        .query("volunteerMemberships")
+        .withIndex("by_auth_user", (range) => range.eq("authUserId", authUserId))
+        .first(),
+    ]);
+    const volunteerByEmail =
+      volunteerMembership ??
+      (await ctx.db
+        .query("volunteerMemberships")
+        .withIndex("by_normalized_email", (range) =>
+          range.eq("normalizedEmail", user.email.trim().toLowerCase()),
+        )
+        .first());
 
     return {
       user: {
@@ -25,6 +39,9 @@ export const getViewer = query({
         email: user.email,
       },
       canBootstrapOwner: ownerEmails.has(user.email.toLowerCase()),
+      volunteer: volunteerByEmail
+        ? { status: volunteerByEmail.status }
+        : null,
       admin:
         membership && !membership.disabledAt
           ? {

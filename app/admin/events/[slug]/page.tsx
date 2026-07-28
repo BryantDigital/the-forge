@@ -32,6 +32,10 @@ export default async function AdminEventPage({
       </div>
     );
   }
+  const volunteerRoster = await fetchAuthQuery(
+    api.volunteerPortal.getEventRoster,
+    { eventId: event._id },
+  );
   const canManage = access?.role === "owner" || access?.role === "event_manager";
   const rosterChildren = roster ?? [];
   const checkedIn = rosterChildren.filter((child) => child.checkedIn).length;
@@ -128,6 +132,58 @@ export default async function AdminEventPage({
           </section>
         )}
 
+        <section className="table-card event-volunteer-roster">
+          <div className="table-card__header roster-toolbar">
+            <div>
+              <h2>Volunteer roster</h2>
+              <p style={{ margin: "6px 0 0", color: "var(--smoke)" }}>
+                Approved volunteers who raised their hand for this event
+              </p>
+            </div>
+            <span className="tag tag--green">
+              {volunteerRoster.length} serving
+            </span>
+          </div>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Volunteer</th>
+                  <th>Contact</th>
+                  <th>Approved service areas</th>
+                  <th>Committed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {volunteerRoster.map((volunteer) => (
+                  <tr key={volunteer.id}>
+                    <td>
+                      <Link
+                        className="table-link"
+                        href={`/admin/volunteers/${volunteer.volunteerSubmissionId}`}
+                      >
+                        {volunteer.name}
+                      </Link>
+                    </td>
+                    <td>
+                      <a href={`mailto:${volunteer.email}`}>{volunteer.email}</a>
+                      <br />
+                      <a href={`tel:${volunteer.mobilePhone}`}>{volunteer.mobilePhone}</a>
+                    </td>
+                    <td>{volunteer.roles.join(", ")}</td>
+                    <td>{formatDateTime(volunteer.committedAt)}</td>
+                  </tr>
+                ))}
+                {volunteerRoster.length === 0 && (
+                  <tr>
+                    <td colSpan={4}>No volunteers have committed to this event yet.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         <section className="table-card print-roster">
           <div className="print-roster__heading">
             <p>The Forge Christian Ministries</p>
@@ -168,6 +224,16 @@ function formatDate(timestamp: number) {
 function formatTime(timestamp: number) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(timestamp);
+}
+
+function formatDateTime(timestamp: number) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
     hour: "numeric",
     minute: "2-digit",
   }).format(timestamp);

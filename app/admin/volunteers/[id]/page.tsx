@@ -5,6 +5,7 @@ import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { fetchAuthQuery } from "../../../../lib/auth-server";
 import { AdminHeader } from "../../components";
+import { VolunteerAccessActions } from "./access-actions";
 import { VolunteerReviewActions } from "./review-actions";
 
 export const metadata: Metadata = { title: "Volunteer Review — Forge Admin" };
@@ -70,6 +71,12 @@ export default async function VolunteerReviewPage({
               submissionId={submission._id}
               status={submission.status}
             />
+            {submission.status === "approved" && (
+              <VolunteerAccessActions
+                submissionId={submission._id}
+                accessStatus={submission.volunteerAccess?.status}
+              />
+            )}
 
             {submission.signatureRequest && (
               <div className="signature-admin-summary">

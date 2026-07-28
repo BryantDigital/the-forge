@@ -7,7 +7,7 @@ import { authClient } from "../../lib/auth-client";
 import { AccountDashboard } from "./account-dashboard";
 import { GivingHistory } from "./giving-history";
 
-export function AuthCard() {
+export function AuthCard({ returnTo = "/account" }: { returnTo?: string }) {
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const viewer = useQuery(api.adminAuth.getViewer);
   const bootstrapOwner = useMutation(api.adminAuth.bootstrapOwner);
@@ -86,6 +86,11 @@ export function AuthCard() {
         )}
 
         <div className="account-actions">
+          {viewer?.volunteer?.status === "active" && (
+            <a className="button button--dark" href="/serve">
+              Open Volunteer Dashboard <span aria-hidden="true">→</span>
+            </a>
+          )}
           {viewer?.admin && (
             <a className="button button--red" href="/admin">
               Open Forge Admin <span aria-hidden="true">→</span>
@@ -163,7 +168,7 @@ export function AuthCard() {
             return;
           }
 
-          window.location.assign("/account");
+          window.location.assign(returnTo);
         }}
       >
         {step === "email" ? (

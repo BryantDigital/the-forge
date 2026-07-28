@@ -56,6 +56,7 @@ export default async function VolunteersAdminPage() {
                   <th>Roles</th>
                   <th>Submitted</th>
                   <th>Status</th>
+                  <th>Portal access</th>
                   <th />
                 </tr>
               </thead>
@@ -77,6 +78,19 @@ export default async function VolunteersAdminPage() {
                       </span>
                     </td>
                     <td>
+                      {submission.status === "approved" ? (
+                        <span className={`tag ${
+                          submission.accessStatus === "active" ? "tag--green" : ""
+                        }`}>
+                          {submission.accessStatus === "active"
+                            ? "Active"
+                            : submission.accessStatus === "revoked"
+                              ? "Revoked"
+                              : "Not activated"}
+                        </span>
+                      ) : "—"}
+                    </td>
+                    <td>
                       <Link className="text-link" href={`/admin/volunteers/${submission.id}`}>
                         Review →
                       </Link>
@@ -85,7 +99,7 @@ export default async function VolunteersAdminPage() {
                 ))}
                 {submissions.length === 0 && (
                   <tr>
-                    <td colSpan={5}>No volunteer applications have been submitted yet.</td>
+                    <td colSpan={6}>No volunteer applications have been submitted yet.</td>
                   </tr>
                 )}
               </tbody>

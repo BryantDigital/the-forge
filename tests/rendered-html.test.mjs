@@ -68,3 +68,12 @@ test("server-renders the family account entry point", async () => {
   assert.match(html, /Access saved children, upcoming registrations, event history, and giving/i);
   assert.match(html, /No login required/i);
 });
+
+test("server-renders the volunteer dashboard entry point", async () => {
+  const response = await render("/serve");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Raise your hand\. Show up ready\./i);
+  assert.match(html, /See where The Forge needs you/i);
+});

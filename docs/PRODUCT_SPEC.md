@@ -110,7 +110,19 @@ supported by real Forge photography.
 - Captures contact information, role interests, background-check willingness,
   statement-of-faith affirmation, and response to “Who is Jesus to you?”
 - Sends Dave a basic notification containing a link to the admin submission.
-- Admin tracks new, reviewing, contacted, and closed states.
+- Admin reviews, denies, or accepts an application into a pending-signature
+  state.
+- A volunteer role is granted only after the application is approved and a
+  finalized signed agreement PDF and document hash are stored.
+- Approved volunteers sign in with their application email and use a limited
+  volunteer dashboard; they never inherit Forge Admin permissions.
+- The volunteer dashboard lists published upcoming events and lets a volunteer
+  commit to or withdraw from an event.
+- Event commitments use the service areas approved on the volunteer
+  application and appear on the event’s admin volunteer roster.
+- Administrators can revoke or restore volunteer dashboard access. Revocation
+  also withdraws that volunteer from future event rosters without deleting the
+  signed agreement or historical audit evidence.
 
 ### Donations
 

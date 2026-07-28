@@ -270,6 +270,38 @@ export default defineSchema({
     .index("by_request", ["signatureRequestId"])
     .index("by_volunteer", ["volunteerSubmissionId"]),
 
+  volunteerMemberships: defineTable({
+    volunteerSubmissionId: v.id("volunteerSubmissions"),
+    normalizedEmail: v.string(),
+    email: v.string(),
+    authUserId: v.optional(v.string()),
+    status: v.union(v.literal("active"), v.literal("revoked")),
+    grantedAt: v.number(),
+    revokedAt: v.optional(v.number()),
+    revokedByAuthUserId: v.optional(v.string()),
+    revokedByEmail: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_submission", ["volunteerSubmissionId"])
+    .index("by_normalized_email", ["normalizedEmail"])
+    .index("by_auth_user", ["authUserId"]),
+
+  volunteerEventCommitments: defineTable({
+    eventId: v.id("events"),
+    volunteerMembershipId: v.id("volunteerMemberships"),
+    volunteerSubmissionId: v.id("volunteerSubmissions"),
+    roles: v.array(v.string()),
+    status: v.union(v.literal("committed"), v.literal("withdrawn")),
+    committedAt: v.number(),
+    withdrawnAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_event_and_status", ["eventId", "status"])
+    .index("by_membership", ["volunteerMembershipId"])
+    .index("by_member_and_event", ["volunteerMembershipId", "eventId"]),
+
   donations: defineTable({
     householdId: v.optional(v.id("households")),
     normalizedEmail: v.string(),

@@ -4442,6 +4442,261 @@ td {
   max-width: 760px;
 }
 
+.volunteer-access-admin {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.volunteer-access-admin span,
+.volunteer-access-admin strong {
+  display: block;
+}
+
+.volunteer-access-admin span {
+  color: var(--smoke);
+  font: 800 0.68rem/1 var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.volunteer-access-admin strong {
+  margin-top: 7px;
+  font: 800 1.25rem/1 var(--font-display);
+  text-transform: uppercase;
+}
+
+.volunteer-access-admin p {
+  margin: 8px 0 0;
+  color: var(--smoke);
+  font-size: 0.84rem;
+}
+
+.event-volunteer-roster {
+  margin-bottom: 34px;
+  border-top: 4px solid var(--red);
+}
+
+.volunteer-portal-hero {
+  background-position: center 38%;
+}
+
+.volunteer-portal-message {
+  max-width: 780px;
+  border-top: 5px solid var(--red);
+  padding: clamp(34px, 6vw, 62px);
+}
+
+.volunteer-portal-message h2 {
+  max-width: 660px;
+  margin: 8px 0 14px;
+  font-size: clamp(2.35rem, 5vw, 4rem);
+}
+
+.volunteer-portal-message > p:not(.eyebrow) {
+  max-width: 620px;
+  margin-bottom: 24px;
+  color: var(--smoke);
+}
+
+.volunteer-portal {
+  display: grid;
+  gap: 34px;
+}
+
+.volunteer-portal-welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 1px;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.volunteer-portal-welcome > div {
+  background: var(--white);
+  padding: clamp(28px, 5vw, 48px);
+}
+
+.volunteer-portal-welcome h2 {
+  margin: 8px 0 14px;
+  font-size: clamp(2.6rem, 5vw, 4.3rem);
+}
+
+.volunteer-portal-welcome > div:first-child > p:last-child {
+  max-width: 640px;
+  margin: 0;
+  color: var(--smoke);
+  font-size: 1.05rem;
+}
+
+.volunteer-role-card {
+  display: grid;
+  align-content: center;
+  border-top: 5px solid var(--red);
+  background:
+    linear-gradient(145deg, rgba(184, 25, 33, 0.15), transparent 65%),
+    var(--ink) !important;
+  color: var(--white);
+}
+
+.volunteer-role-card span,
+.volunteer-role-card strong {
+  display: block;
+}
+
+.volunteer-role-card span {
+  color: #c2bdb6;
+  font: 800 0.68rem/1 var(--font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.volunteer-role-card strong {
+  margin-top: 14px;
+  font: 800 1.35rem/1.35 var(--font-display);
+  text-transform: uppercase;
+}
+
+.volunteer-commitment-summary {
+  border-left: 5px solid var(--red);
+  background: #ece7de;
+  padding: 24px 28px;
+}
+
+.volunteer-commitment-summary h3 {
+  margin: 7px 0 6px;
+  font-size: 2rem;
+}
+
+.volunteer-commitment-summary > p:last-child {
+  margin: 0;
+  color: var(--smoke);
+}
+
+.volunteer-portal-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.volunteer-portal-heading h3 {
+  margin-top: 7px;
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+}
+
+.volunteer-portal-heading > span {
+  color: var(--smoke);
+  font: 800 0.75rem/1 var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.volunteer-event-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.volunteer-event-card {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--white);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.volunteer-event-card:hover {
+  transform: translateY(-2px);
+  border-color: #aaa39a;
+  box-shadow: 0 14px 34px rgba(18, 17, 15, 0.08);
+}
+
+.volunteer-event-card.is-committed {
+  border-color: rgba(184, 25, 33, 0.45);
+  box-shadow: inset 0 4px 0 var(--red);
+}
+
+.volunteer-event-card__date {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--ink);
+  color: var(--white);
+}
+
+.volunteer-event-card__date span {
+  color: var(--red-bright);
+  font: 800 0.7rem/1 var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.volunteer-event-card__date strong {
+  margin-top: 8px;
+  font: 800 2.35rem/1 var(--font-display);
+}
+
+.volunteer-event-card__body {
+  min-width: 0;
+  padding: 24px;
+}
+
+.volunteer-event-card h4 {
+  margin: 9px 0 10px;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+}
+
+.volunteer-event-card__body > p {
+  margin: 8px 0 0;
+  color: var(--smoke);
+  font-size: 0.88rem;
+}
+
+.volunteer-event-card__assignment {
+  margin-top: 18px;
+  border-left: 3px solid var(--red);
+  background: #f0ebe3;
+  padding: 13px 15px;
+}
+
+.volunteer-event-card__assignment span,
+.volunteer-event-card__assignment strong {
+  display: block;
+}
+
+.volunteer-event-card__assignment span {
+  color: var(--smoke);
+  font: 800 0.62rem/1 var(--font-display);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.volunteer-event-card__assignment strong {
+  margin-top: 6px;
+  font-size: 0.84rem;
+}
+
+.volunteer-event-card__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.volunteer-event-card__actions .button {
+  min-height: 44px;
+  padding: 0 16px;
+}
+
 @media (max-width: 900px) {
   .volunteer-admin-grid {
     grid-template-columns: 1fr;
@@ -4450,9 +4705,32 @@ td {
   .volunteer-workflow-panel {
     position: static;
   }
+
+  .volunteer-portal-welcome,
+  .volunteer-event-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
+  .volunteer-portal-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .volunteer-event-card {
+    grid-template-columns: 66px minmax(0, 1fr);
+  }
+
+  .volunteer-event-card__body {
+    padding: 19px;
+  }
+
+  .volunteer-event-card__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .family-child-card__top {
     grid-template-columns: 44px minmax(0, 1fr);
   }

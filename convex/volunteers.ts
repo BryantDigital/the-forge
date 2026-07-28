@@ -167,16 +167,34 @@ export const listAdmin = query({
           .order("desc")
           .collect()
       : await ctx.db.query("volunteerSubmissions").order("desc").collect();
-    return submissions.map((item) => ({
-      id: item._id,
-      name: `${item.firstName} ${item.lastName}`,
-      email: item.email,
-      mobilePhone: item.mobilePhone,
-      roles: item.roleInterests,
-      status: item.status,
-      createdAt: item.createdAt,
-      reviewedAt: item.reviewedAt,
-    }));
+    return Promise.all(
+      submissions.map(async (item) => {
+        const membership =
+          (await ctx.db
+            .query("volunteerMemberships")
+            .withIndex("by_submission", (range) =>
+              range.eq("volunteerSubmissionId", item._id),
+            )
+            .first()) ??
+          (await ctx.db
+            .query("volunteerMemberships")
+            .withIndex("by_normalized_email", (range) =>
+              range.eq("normalizedEmail", item.email.trim().toLowerCase()),
+            )
+            .first());
+        return {
+          id: item._id,
+          name: `${item.firstName} ${item.lastName}`,
+          email: item.email,
+          mobilePhone: item.mobilePhone,
+          roles: item.roleInterests,
+          status: item.status,
+          accessStatus: membership?.status,
+          createdAt: item.createdAt,
+          reviewedAt: item.reviewedAt,
+        };
+      }),
+    );
   },
 });
 
@@ -204,9 +222,29 @@ export const getAdmin = query({
           )
           .collect()
       : [];
+    const membership =
+      (await ctx.db
+        .query("volunteerMemberships")
+        .withIndex("by_submission", (range) =>
+          range.eq("volunteerSubmissionId", submission._id),
+        )
+        .first()) ??
+      (await ctx.db
+        .query("volunteerMemberships")
+        .withIndex("by_normalized_email", (range) =>
+          range.eq("normalizedEmail", submission.email.trim().toLowerCase()),
+        )
+        .first());
     return {
       ...submission,
       name: `${submission.firstName} ${submission.lastName}`,
+      volunteerAccess: membership
+        ? {
+            status: membership.status,
+            grantedAt: membership.grantedAt,
+            revokedAt: membership.revokedAt,
+          }
+        : null,
       signatureRequest: activeRequest
         ? {
             id: activeRequest._id,
@@ -543,6 +581,42 @@ export const completeSignature = internalMutation({
       status: "approved",
       updatedAt: now,
     });
+    const existingMembership =
+      (await ctx.db
+        .query("volunteerMemberships")
+        .withIndex("by_submission", (range) =>
+          range.eq("volunteerSubmissionId", submission._id),
+        )
+        .first()) ??
+      (await ctx.db
+        .query("volunteerMemberships")
+        .withIndex("by_normalized_email", (range) =>
+          range.eq("normalizedEmail", submission.email.trim().toLowerCase()),
+        )
+        .first());
+    if (existingMembership) {
+      await ctx.db.patch(existingMembership._id, {
+        volunteerSubmissionId: submission._id,
+        email: submission.email,
+        normalizedEmail: submission.email.trim().toLowerCase(),
+        status: "active",
+        grantedAt: now,
+        revokedAt: undefined,
+        revokedByAuthUserId: undefined,
+        revokedByEmail: undefined,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("volunteerMemberships", {
+        volunteerSubmissionId: submission._id,
+        normalizedEmail: submission.email.trim().toLowerCase(),
+        email: submission.email,
+        status: "active",
+        grantedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
     await ctx.db.insert("signatureEvents", {
       signatureRequestId: request._id,
       volunteerSubmissionId: submission._id,
@@ -592,10 +666,11 @@ export const sendSignedConfirmation = internalAction({
     await sendEmail({
       to: context.signerEmail,
       subject: "Your Forge volunteer agreement is complete",
-      text: `Thank you, ${context.signerName}. Your volunteer agreement is signed and your application is approved. Download your copy: ${context.documentUrl}`,
+      text: `Thank you, ${context.signerName}. Your volunteer agreement is signed and your application is approved. Open your volunteer dashboard: ${siteUrl()}/serve Download your copy: ${context.documentUrl}`,
       html: signedConfirmationEmail(
         context.signerName,
         context.documentUrl,
+        `${siteUrl()}/serve`,
       ),
     });
   },
@@ -719,11 +794,11 @@ function signingInvitationEmail(name: string, url: string) {
   );
 }
 
-function signedConfirmationEmail(name: string, url: string) {
+function signedConfirmationEmail(name: string, documentUrl: string, dashboardUrl: string) {
   return emailFrame(
     "Application approved",
     "Welcome to the mission.",
-    `<p style="font-size:16px;line-height:1.65;color:#4d4944">Thank you, ${escapeHtml(name)}. Your agreement is signed and your volunteer application is approved. A Forge leader will contact you about the next opportunity to serve.</p>${emailButton("Download signed agreement", url)}`,
+    `<p style="font-size:16px;line-height:1.65;color:#4d4944">Thank you, ${escapeHtml(name)}. Your agreement is signed and your volunteer application is approved. Sign in to your volunteer dashboard to see upcoming events and raise your hand to serve.</p>${emailButton("Open volunteer dashboard", dashboardUrl)}<p style="margin:20px 0 0;font-size:13px"><a href="${escapeHtml(documentUrl)}" style="color:#4d4944">Download your signed agreement →</a></p>`,
   );
 }
 

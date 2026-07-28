@@ -19,6 +19,7 @@ import type * as households from "../households.js";
 import type * as http from "../http.js";
 import type * as registrations from "../registrations.js";
 import type * as volunteerAgreement from "../volunteerAgreement.js";
+import type * as volunteerPortal from "../volunteerPortal.js";
 import type * as volunteerSignatures from "../volunteerSignatures.js";
 import type * as volunteers from "../volunteers.js";
 
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   registrations: typeof registrations;
   volunteerAgreement: typeof volunteerAgreement;
+  volunteerPortal: typeof volunteerPortal;
   volunteerSignatures: typeof volunteerSignatures;
   volunteers: typeof volunteers;
 }>;

@@ -212,6 +212,8 @@ standard Next.js build. Both paths have been used during development.
 - `app/account/giving-history.tsx` — giving and recurring gift display.
 - `app/donate/page.tsx` and `app/donation-form.tsx` — donation experience.
 - `app/volunteer/page.tsx` — volunteer application presentation.
+- `app/serve/...` — authenticated approved-volunteer dashboard and event
+  commitment controls.
 - `app/waiver/page.tsx` — participation waiver.
 
 ### Forge Admin
@@ -223,7 +225,7 @@ standard Next.js build. Both paths have been used during development.
 - `app/admin/events/[slug]/edit/page.tsx` — edit event.
 - `app/admin/events/event-form.tsx` — event editor.
 - `app/admin/events/[slug]/page.tsx` — event metrics, communications, parent
-  roster, and child check-in roster.
+  roster, volunteer roster, and child check-in roster.
 - `app/admin/events/[slug]/communication-composer.tsx` — admin broadcast UI and
   delivery history.
 - `app/admin/events/[slug]/roster-actions.tsx` — print and CSV export controls
@@ -264,6 +266,9 @@ standard Next.js build. Both paths have been used during development.
   association, cancellations, waitlist, offers, and registration emails.
 - `convex/households.ts` — family onboarding, reusable child management,
   verified-email adult invitations, and branded invitation delivery.
+- `convex/volunteerPortal.ts` — signed-approval membership policy, verified
+  volunteer access, event commitments, admin rosters, access revocation, and
+  legacy-approved backfill.
 - `convex/communications.ts` — audiences, queueing, SendGrid/Twilio delivery,
   reminder scheduling, delivery history, and SMS suppression.
 - `convex/eventNotifications.ts` — public event-alert subscriptions.
@@ -313,6 +318,7 @@ The complete schema is in `convex/schema.ts`. The relationship model is:
 ```text
 Better Auth user
   ├── may join one household through a householdMember
+  ├── may have one signed-approval volunteerMembership
   └── may have one adminMembership
 
 household
@@ -325,6 +331,7 @@ household
 event
   ├── many registrations
   ├── many registrationChildren
+  ├── many volunteerEventCommitments
   ├── many eventNotifications
   ├── many communications/deliveries
   └── many audit logs by entity reference
@@ -461,6 +468,29 @@ Related tables:
   token, and tracks sent/viewed/signed state;
 - `signatureEvents` is the signing audit trail;
 - finalized PDFs are stored in Convex file storage with a SHA-256 digest.
+
+### `volunteerMemberships` and `volunteerEventCommitments`
+
+Volunteer access is separate from `adminMemberships`. An active volunteer
+membership grants only the `/serve` dashboard and volunteer commitment
+mutations; it does not grant event editing, family data, communications,
+financial data, or admin navigation.
+
+Membership policy:
+
+- the application status must be `approved`;
+- a signed request must have status `signed`, a finalized PDF storage ID, and a
+  SHA-256 document digest;
+- membership is associated to the verified normalized application email and
+  attaches to the Better Auth user on login;
+- manual revocation preserves the application, signed agreement, membership
+  history, and audit log;
+- revocation automatically withdraws committed future events;
+- restoration does not silently restore prior commitments.
+
+`volunteerEventCommitments` is one record per volunteer membership and event.
+It snapshots the application’s approved service areas and uses `committed` or
+`withdrawn` status so history is preserved.
 
 ### Stripe tables
 
@@ -829,7 +859,7 @@ Next build as well catches Vercel-specific issues.
 At the time of this handoff:
 
 - TypeScript passes;
-- 16 tests pass;
+- 18 tests pass;
 - both Vinext and Next production builds pass;
 - ESLint has warnings but no errors.
 
@@ -942,6 +972,13 @@ Verified or implemented:
 - secure 14-day, single-use agreement links;
 - backend-generated signed PDFs, document hashes, and audit events;
 - automatic volunteer approval and confirmation email after signature.
+- automatic active volunteer membership after finalized e-sign approval;
+- limited approved-volunteer dashboard at `/serve`;
+- upcoming event volunteer commit/withdraw workflow;
+- event-level admin volunteer roster with contact and approved service areas;
+- manual admin volunteer access revocation/restoration;
+- future roster withdrawal when volunteer access is revoked;
+- account and approval email links into the volunteer dashboard.
 
 ## 19. Known incomplete, placeholder, or launch-blocking work
 
@@ -967,6 +1004,10 @@ This section is especially important. Do not infer completion from polished UI.
 - The basic system uses typed-name signatures, email-link attribution,
   timestamps, immutable template snapshots, finalized PDFs, and SHA-256
   digests. It does not provide notarization or identity verification.
+- Event commitments currently snapshot all service areas approved on the
+  volunteer application. There is not yet event-specific role selection,
+  scheduling, shift capacity, attendance, or admin role assignment.
+- Volunteers are not yet included in the admin communications composer.
 
 ### Newsletter
 
@@ -1029,7 +1070,7 @@ A sensible order from the current state:
 
 1. **Real admin dashboard**
    - replace hardcoded metrics/activity;
-   - add volunteer counts;
+   - add event volunteer coverage and commitment trends;
    - donation reporting;
    - attendance trends;
    - communication health.

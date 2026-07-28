@@ -5,7 +5,16 @@ import { AuthCard } from "./auth-card";
 
 export const metadata: Metadata = { title: "Login" };
 
-export default function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const params = await searchParams;
+  const returnTo =
+    params.returnTo?.startsWith("/") && !params.returnTo.startsWith("//")
+      ? params.returnTo
+      : "/account";
   return (
     <>
       <ForgeHeader />
@@ -19,7 +28,7 @@ export default function AccountPage() {
         </header>
         <section className="section section--interior">
           <div className="shell account-page-shell">
-            <AuthCard />
+            <AuthCard returnTo={returnTo} />
             <div className="account-page-aside">
               <SectionEyebrow>No login required</SectionEyebrow>
               <h2>RSVP without slowing down.</h2>
