@@ -193,6 +193,7 @@ export default defineSchema({
     normalizedEmail: v.string(),
     donorFirstName: v.optional(v.string()),
     donorLastName: v.optional(v.string()),
+    livemode: v.optional(v.boolean()),
     stripeCustomerId: v.string(),
     stripeCheckoutSessionId: v.optional(v.string()),
     stripePaymentIntentId: v.optional(v.string()),
@@ -221,6 +222,7 @@ export default defineSchema({
 
   stripeCustomers: defineTable({
     stripeCustomerId: v.string(),
+    livemode: v.optional(v.boolean()),
     householdId: v.optional(v.id("households")),
     normalizedEmail: v.string(),
     email: v.string(),
@@ -236,6 +238,7 @@ export default defineSchema({
   stripeSubscriptions: defineTable({
     stripeSubscriptionId: v.string(),
     stripeCustomerId: v.string(),
+    livemode: v.optional(v.boolean()),
     householdId: v.optional(v.id("households")),
     normalizedEmail: v.string(),
     frequency: v.union(

@@ -29,9 +29,10 @@ export const createCheckoutSession = action({
   },
   handler: async (ctx, args): Promise<{ url: string }> => {
     const input = validateDonation(args);
+    const livemode = stripeLiveMode();
     const existingCustomer = await ctx.runQuery(
       internal.donations.findStripeCustomer,
-      { normalizedEmail: input.normalizedEmail },
+      { normalizedEmail: input.normalizedEmail, livemode },
     );
     const siteUrl = publicSiteUrl();
     const recurring = recurringInterval(input.frequency);
@@ -136,13 +137,14 @@ export const getMyGiving = query({
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user?.email) return null;
     const normalizedEmail = user.email.toLowerCase();
-    const [customer, donations, subscriptions] = await Promise.all([
+    const livemode = stripeLiveMode();
+    const [customers, donations, subscriptions] = await Promise.all([
       ctx.db
         .query("stripeCustomers")
         .withIndex("by_normalized_email", (range) =>
           range.eq("normalizedEmail", normalizedEmail),
         )
-        .first(),
+        .collect(),
       ctx.db
         .query("donations")
         .withIndex("by_normalized_email", (range) =>
@@ -156,10 +158,17 @@ export const getMyGiving = query({
         )
         .collect(),
     ]);
+    const customer = customers.find(
+      (item) => Boolean(item.livemode) === livemode,
+    );
     return {
       hasStripeCustomer: Boolean(customer),
       donations: donations
-        .filter((donation) => donation.status === "paid")
+        .filter(
+          (donation) =>
+            donation.status === "paid" &&
+            Boolean(donation.livemode) === livemode,
+        )
         .sort((a, b) => b.occurredAt - a.occurredAt)
         .map((donation) => ({
           id: donation._id,
@@ -170,6 +179,10 @@ export const getMyGiving = query({
           receiptUrl: donation.receiptUrl,
         })),
       subscriptions: subscriptions
+        .filter(
+          (subscription) =>
+            Boolean(subscription.livemode) === livemode,
+        )
         .sort((a, b) => b.updatedAt - a.updatedAt)
         .map((subscription) => ({
           id: subscription._id,
@@ -185,14 +198,18 @@ export const getMyGiving = query({
 });
 
 export const findStripeCustomer = internalQuery({
-  args: { normalizedEmail: v.string() },
-  handler: async (ctx, args) =>
-    ctx.db
+  args: { normalizedEmail: v.string(), livemode: v.boolean() },
+  handler: async (ctx, args) => {
+    const customers = await ctx.db
       .query("stripeCustomers")
       .withIndex("by_normalized_email", (range) =>
         range.eq("normalizedEmail", args.normalizedEmail),
       )
-      .first(),
+      .collect();
+    return customers.find(
+      (customer) => Boolean(customer.livemode) === args.livemode,
+    );
+  },
 });
 
 export const getMyPortalCustomer = internalQuery({
@@ -200,12 +217,16 @@ export const getMyPortalCustomer = internalQuery({
   handler: async (ctx) => {
     const user = await authComponent.safeGetAuthUser(ctx);
     if (!user?.email) return null;
-    return ctx.db
+    const customers = await ctx.db
       .query("stripeCustomers")
       .withIndex("by_normalized_email", (range) =>
         range.eq("normalizedEmail", user.email.toLowerCase()),
       )
-      .first();
+      .collect();
+    const livemode = stripeLiveMode();
+    return customers.find(
+      (customer) => Boolean(customer.livemode) === livemode,
+    );
   },
 });
 
@@ -230,9 +251,15 @@ export const processStripeWebhook = internalMutation({
         ctx,
         object as StripeCheckoutSession,
         event.created,
+        Boolean(event.livemode),
       );
     } else if (event.type === "invoice.paid") {
-      await processPaidInvoice(ctx, object as StripeInvoice, event.created);
+      await processPaidInvoice(
+        ctx,
+        object as StripeInvoice,
+        event.created,
+        Boolean(event.livemode),
+      );
     } else if (
       event.type === "customer.subscription.created" ||
       event.type === "customer.subscription.updated" ||
@@ -242,6 +269,7 @@ export const processStripeWebhook = internalMutation({
         ctx,
         object as StripeSubscription,
         event.created,
+        Boolean(event.livemode),
       );
     }
 
@@ -258,6 +286,7 @@ async function processCheckoutSession(
   ctx: MutationCtx,
   session: StripeCheckoutSession,
   eventCreated: number,
+  livemode: boolean,
 ) {
   const customerId = stripeId(session.customer);
   const email = cleanEmail(
@@ -275,6 +304,7 @@ async function processCheckoutSession(
     firstName,
     lastName,
     householdId,
+    livemode,
   });
 
   const frequency = parseFrequency(session.metadata?.frequency);
@@ -289,6 +319,7 @@ async function processCheckoutSession(
       amountInCents: numberValue(session.amount_total ?? session.metadata?.amountInCents),
       currency: String(session.currency ?? "usd").toLowerCase(),
       status: "active",
+      livemode,
     });
     return;
   }
@@ -307,6 +338,7 @@ async function processCheckoutSession(
       frequency,
       status: "paid",
       occurredAt: eventCreated * 1000,
+      livemode,
     });
   }
 }
@@ -315,6 +347,7 @@ async function processPaidInvoice(
   ctx: MutationCtx,
   invoice: StripeInvoice,
   eventCreated: number,
+  livemode: boolean,
 ) {
   const customerId = stripeId(invoice.customer);
   const subscriptionId =
@@ -365,6 +398,7 @@ async function processPaidInvoice(
     status: "paid",
     occurredAt:
       numberValue(invoice.status_transitions?.paid_at || eventCreated) * 1000,
+    livemode,
   });
 }
 
@@ -372,6 +406,7 @@ async function processSubscription(
   ctx: MutationCtx,
   subscription: StripeSubscription,
   eventCreated: number,
+  livemode: boolean,
 ) {
   const customerId = stripeId(subscription.customer);
   if (!customerId || !subscription.id) return;
@@ -406,6 +441,7 @@ async function processSubscription(
       subscription.status === "canceled"
         ? numberValue(subscription.canceled_at || eventCreated) * 1000
         : undefined,
+    livemode,
   });
 }
 
@@ -417,6 +453,7 @@ async function upsertStripeCustomer(
     firstName: string;
     lastName: string;
     householdId?: Id<"households">;
+    livemode: boolean;
   },
 ) {
   const existing = await ctx.db
@@ -432,6 +469,7 @@ async function upsertStripeCustomer(
     firstName: input.firstName,
     lastName: input.lastName,
     householdId: input.householdId,
+    livemode: input.livemode,
     updatedAt: now,
   };
   if (existing) {
@@ -459,6 +497,7 @@ async function upsertSubscription(
     currentPeriodEnd?: number;
     cancelAtPeriodEnd?: boolean;
     cancelledAt?: number;
+    livemode: boolean;
   },
 ) {
   const existing = await ctx.db
@@ -497,6 +536,7 @@ async function recordDonation(
     frequency: Frequency;
     status: string;
     occurredAt: number;
+    livemode: boolean;
   },
 ) {
   if (input.stripeInvoiceId) {
@@ -637,6 +677,10 @@ function publicSiteUrl() {
   ).replace(/\/$/, "");
 }
 
+function stripeLiveMode() {
+  return process.env.STRIPE_LIVE_MODE === "true";
+}
+
 function cleanName(value: unknown) {
   return String(value ?? "").trim().replace(/\s+/g, " ").slice(0, 100);
 }
@@ -675,6 +719,7 @@ type StripeEvent = {
   id: string;
   type: string;
   created: number;
+  livemode?: boolean;
   data?: { object?: Record<string, unknown> };
 };
 
