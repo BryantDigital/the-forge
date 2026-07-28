@@ -182,9 +182,181 @@ h3 {
   box-shadow: 9px 9px 0 rgba(0, 0, 0, 0.25);
 }
 
+.button--dark {
+  background: var(--ink);
+  box-shadow: 6px 6px 0 rgba(209, 31, 47, 0.32);
+  color: var(--white);
+}
+
+.button--dark:hover {
+  background: #29292d;
+  box-shadow: 8px 8px 0 rgba(209, 31, 47, 0.24);
+}
+
 .button--ghost {
   border-color: rgba(255, 255, 255, 0.55);
   color: var(--white);
+}
+
+.event-registration-cta {
+  display: grid;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding: 26px;
+}
+
+.event-registration-cta p,
+.event-registration-cta small {
+  margin: 0;
+}
+
+.event-registration-cta small {
+  color: var(--smoke);
+}
+
+.registration-form {
+  align-items: start;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.72fr);
+}
+
+.registration-children {
+  display: grid;
+  gap: 40px;
+  margin-top: 54px;
+}
+
+.registration-child {
+  border-top: 1px solid var(--line);
+  padding-top: 36px;
+}
+
+.registration-child__heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.registration-child__remove {
+  border: 0;
+  background: transparent;
+  color: var(--red);
+}
+
+.registration-add-child {
+  margin-top: 22px;
+  padding-inline: 18px;
+}
+
+.registration-summary {
+  position: sticky;
+  top: 110px;
+  display: grid;
+  gap: 20px;
+}
+
+.registration-summary h3 {
+  margin: 0;
+}
+
+.registration-summary .checkbox-row {
+  margin: 0;
+}
+
+.registration-waitlist-note {
+  border-left: 3px solid var(--red);
+  background: #f4e7e8;
+  padding: 14px 16px;
+  color: #5c171c;
+}
+
+.registration-submit {
+  width: 100%;
+}
+
+.registration-fine-print {
+  margin: -4px 0 0;
+  color: var(--smoke);
+  font-size: 0.82rem;
+}
+
+.registration-success,
+.registration-unavailable,
+.waitlist-claim-card {
+  max-width: 760px;
+  padding: clamp(28px, 5vw, 52px);
+}
+
+.registration-success__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.manage-registration-layout {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 24px;
+}
+
+.manage-registration-summary,
+.manage-registration-children {
+  padding: clamp(24px, 4vw, 38px);
+}
+
+.managed-child-list {
+  display: grid;
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.managed-child {
+  display: grid;
+  align-items: center;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  border: 1px solid #dedad2;
+  background: var(--white);
+  padding: 15px;
+}
+
+.managed-child input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--red);
+}
+
+.managed-child span {
+  display: grid;
+}
+
+.managed-child small,
+.managed-child em {
+  color: var(--smoke);
+  font-size: 0.8rem;
+  font-style: normal;
+}
+
+.managed-child.is-cancelled {
+  opacity: 0.58;
+}
+
+.manage-cancel-button {
+  margin-top: 8px;
+}
+
+.manage-registration-footer {
+  margin-top: 28px;
+}
+
+.waitlist-claim-card h2 {
+  margin-bottom: 14px;
+}
+
+.waitlist-claim-card .button {
+  margin-top: 18px;
 }
 
 .button--small {
@@ -2550,6 +2722,15 @@ td {
 }
 
 @media (max-width: 900px) {
+  .registration-form,
+  .manage-registration-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .registration-summary {
+    position: static;
+  }
+
   .site-nav,
   .site-header__cta {
     display: none;

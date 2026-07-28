@@ -73,11 +73,33 @@ export default async function EventDetailPage({
                   <div><span>Capacity</span><strong>{event.capacity} boys</strong></div>
                 </div>
               </div>
+              {event.status === "open" || event.status === "full" ? (
+                <div className="event-registration-cta">
+                  <p>
+                    {event.status === "full"
+                      ? "Join the family waitlist. We’ll only offer seats when your entire request fits."
+                      : `${event.remaining ?? event.capacity} spots are currently available.`}
+                  </p>
+                  <Link className="button button--red" href={`/events/${event.slug}/register`}>
+                    {event.status === "full" ? "Join the waitlist" : "Register boys"}
+                  </Link>
+                  <small>No account or password required.</small>
+                </div>
+              ) : event.status === "scheduled" ? (
                 <EventNotificationForm
-                  mode={event.status === "full" ? "waitlist" : "registration"}
+                  mode="registration"
                   eventSlug={event.slug}
                   registrationLabel={event.registrationLabel}
                 />
+              ) : (
+                <div className="event-registration-cta">
+                  <p>
+                    {event.status === "cancelled"
+                      ? "This event has been cancelled."
+                      : "Registration for this event is closed."}
+                  </p>
+                </div>
+              )}
               <div className="event-action-card__footer">
                 <Link className="text-link" href="/events">← All events</Link>
               </div>

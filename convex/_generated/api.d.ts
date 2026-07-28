@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as eventNotifications from "../eventNotifications.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
+import type * as registrations from "../registrations.js";
 
 import type {
   ApiFromModules,
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   eventNotifications: typeof eventNotifications;
   events: typeof events;
   http: typeof http;
+  registrations: typeof registrations;
 }>;
 
 /**

@@ -139,7 +139,7 @@ export default async function AdminEventPage({
               <button className="choice" type="button" style={{ padding: "0 16px" }}>Export CSV</button>
             </div>
           </div>
-          <RosterTable children={rosterChildren} />
+          <RosterTable rosterChildren={rosterChildren} />
         </section>
       </main>
     </div>

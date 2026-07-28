@@ -13,9 +13,9 @@ type RosterChild = {
   checkedIn: boolean;
 };
 
-export function RosterTable({ children }: { children: RosterChild[] }) {
+export function RosterTable({ rosterChildren }: { rosterChildren: RosterChild[] }) {
   const setCheckIn = useMutation(api.events.setChildCheckIn);
-  const [rows, setRows] = useState(children);
+  const [rows, setRows] = useState(rosterChildren);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 

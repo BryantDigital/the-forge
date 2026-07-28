@@ -257,11 +257,17 @@ export const update = mutation({
 });
 
 async function presentEvent(ctx: QueryCtx, event: Doc<"events">) {
-  const [confirmed, waitlisted, imageUrl] = await Promise.all([
+  const [confirmed, offered, waitlisted, imageUrl] = await Promise.all([
     ctx.db
       .query("registrations")
       .withIndex("by_event_and_status", (range) =>
         range.eq("eventId", event._id).eq("status", "confirmed"),
+      )
+      .collect(),
+    ctx.db
+      .query("registrations")
+      .withIndex("by_event_and_status", (range) =>
+        range.eq("eventId", event._id).eq("status", "offered"),
       )
       .collect(),
     ctx.db
@@ -274,25 +280,31 @@ async function presentEvent(ctx: QueryCtx, event: Doc<"events">) {
   ]);
 
   const registered = confirmed.reduce((total, registration) => total + registration.seatCount, 0);
-  const waitlistSeats = waitlisted.reduce(
+  const offeredSeats = offered.reduce(
+    (total, registration) => total + registration.seatCount,
+    0,
+  );
+  const waitlistSeats = [...waitlisted, ...offered].reduce(
     (total, registration) => total + registration.seatCount,
     0,
   );
   const [registeredSms, waitlistedSms] = await Promise.all([
     countSmsHouseholds(ctx, confirmed),
-    countSmsHouseholds(ctx, waitlisted),
+    countSmsHouseholds(ctx, [...waitlisted, ...offered]),
   ]);
 
   return {
     ...event,
+    isPast: event.startsAt < Date.now(),
+    timeUntilStartMs: event.startsAt - Date.now(),
     imageUrl: imageUrl ?? "/images/forge-brotherhood.jpg",
     registered,
     waitlisted: waitlistSeats,
     registeredFamilies: confirmed.length,
-    waitlistedFamilies: waitlisted.length,
+    waitlistedFamilies: waitlisted.length + offered.length,
     registeredSms,
     waitlistedSms,
-    remaining: Math.max(0, event.capacity - registered),
+    remaining: Math.max(0, event.capacity - registered - offeredSeats),
   };
 }
 

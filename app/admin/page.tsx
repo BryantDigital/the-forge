@@ -14,7 +14,7 @@ export default async function AdminPage() {
   }
   const events = await fetchAuthQuery(api.events.listAdmin, {});
   const nextEvent = [...events]
-    .filter((event) => event.startsAt >= Date.now() && event.status !== "cancelled")
+    .filter((event) => !event.isPast && event.status !== "cancelled")
     .sort((a, b) => a.startsAt - b.startsAt)[0];
   const registered = nextEvent?.registered ?? 0;
   const waitlisted = nextEvent?.waitlisted ?? 0;
@@ -33,7 +33,7 @@ export default async function AdminPage() {
         </div>
 
         <section className="metric-grid" aria-label="At a glance">
-          <div className="metric metric--red"><span>Next event</span><strong>{nextEvent ? daysUntil(nextEvent.startsAt) : "None"}</strong></div>
+          <div className="metric metric--red"><span>Next event</span><strong>{nextEvent ? daysUntil(nextEvent.timeUntilStartMs) : "None"}</strong></div>
           <div className="metric"><span>Registered boys</span><strong>{registered} / {nextEvent?.capacity ?? 0}</strong></div>
           <div className="metric"><span>Waitlisted</span><strong>{waitlisted}</strong></div>
           <div className="metric"><span>Open volunteers</span><strong>3</strong></div>
@@ -90,8 +90,8 @@ export default async function AdminPage() {
   );
 }
 
-function daysUntil(timestamp: number) {
-  const days = Math.max(0, Math.ceil((timestamp - Date.now()) / 86_400_000));
+function daysUntil(timeUntilStartMs: number) {
+  const days = Math.max(0, Math.ceil(timeUntilStartMs / 86_400_000));
   return days === 0 ? "Today" : `${days} day${days === 1 ? "" : "s"}`;
 }
 

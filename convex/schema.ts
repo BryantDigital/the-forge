@@ -89,6 +89,7 @@ export default defineSchema({
     waitlistPosition: v.optional(v.number()),
     offeredAt: v.optional(v.number()),
     offerExpiresAt: v.optional(v.number()),
+    offerTokenHash: v.optional(v.string()),
     managementTokenHash: v.string(),
     waiverVersion: v.string(),
     waiverAcceptedAt: v.number(),
@@ -105,7 +106,10 @@ export default defineSchema({
   })
     .index("by_event", ["eventId"])
     .index("by_event_and_status", ["eventId", "status"])
+    .index("by_event_and_household", ["eventId", "householdId"])
     .index("by_household", ["householdId"])
+    .index("by_management_token", ["managementTokenHash"])
+    .index("by_offer_token", ["offerTokenHash"])
     .index("by_offer_expiration", ["status", "offerExpiresAt"]),
 
   registrationChildren: defineTable({
