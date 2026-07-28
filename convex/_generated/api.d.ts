@@ -10,6 +10,8 @@
 
 import type * as adminAuth from "../adminAuth.js";
 import type * as auth from "../auth.js";
+import type * as communications from "../communications.js";
+import type * as crons from "../crons.js";
 import type * as eventNotifications from "../eventNotifications.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
@@ -24,6 +26,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   adminAuth: typeof adminAuth;
   auth: typeof auth;
+  communications: typeof communications;
+  crons: typeof crons;
   eventNotifications: typeof eventNotifications;
   events: typeof events;
   http: typeof http;

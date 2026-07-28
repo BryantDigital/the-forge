@@ -596,6 +596,11 @@ export const sendAccountCancellationNotifications = internalAction({
     });
     if (!context) return { sent: false };
     await deliverCancellationEmails(context, args.cancelledChildren);
+    await ctx.runMutation(internal.communications.queueRegistrationSms, {
+      registrationId: context.registration._id,
+      kind: "cancellation",
+      body: `${args.cancelledChildren} child${args.cancelledChildren === 1 ? " was" : "ren were"} cancelled from ${context.event.title}. Any released seats have been returned.`,
+    });
     return { sent: true };
   },
 });
@@ -633,6 +638,13 @@ export const sendConfirmation = action({
         confirmed ? "Registration confirmed" : "Waitlist confirmed",
       ),
     });
+    await ctx.runMutation(internal.communications.queueRegistrationSms, {
+      registrationId: context.registration._id,
+      kind: "confirmation",
+      body: confirmed
+        ? `You're confirmed for ${context.event.title}. ${context.registration.seatCount} seat${context.registration.seatCount === 1 ? "" : "s"} reserved. Manage your reservation: ${manageUrl}`
+        : `You're on the waitlist for ${context.event.title}. We’ll text and email if your entire ${context.registration.seatCount}-seat request can be offered. Manage: ${manageUrl}`,
+    });
     return { sent: true };
   },
 });
@@ -651,6 +663,11 @@ export const sendCancellationNotifications = action({
       throw new ConvexError("Invalid registration management token.");
     }
     await deliverCancellationEmails(context, args.cancelledChildren);
+    await ctx.runMutation(internal.communications.queueRegistrationSms, {
+      registrationId: context.registration._id,
+      kind: "cancellation",
+      body: `${args.cancelledChildren} child${args.cancelledChildren === 1 ? " was" : "ren were"} cancelled from ${context.event.title}. Any released seats have been returned.`,
+    });
     return { sent: true };
   },
 });
@@ -712,6 +729,7 @@ export const offerCandidate = internalMutation({
     ]);
     if (!event || !household) return null;
     return {
+      registrationId: firstFit._id,
       email: household.email,
       parentFirstName: household.parentFirstName,
       eventTitle: event.title,
@@ -751,6 +769,11 @@ export const processWaitlist = internalAction({
          <p style="margin:0"><a href="${claimUrl}" style="${buttonStyle}">Claim all seats&nbsp; →</a></p>`,
         "Waitlist opening",
       ),
+    });
+    await ctx.runMutation(internal.communications.queueRegistrationSms, {
+      registrationId: result.registrationId,
+      kind: "waitlist_offer",
+      body: `Your seats are ready for ${result.eventTitle}. Claim the complete ${result.seatCount}-seat request within 24 hours: ${claimUrl}`,
     });
     return { offered: true };
   },

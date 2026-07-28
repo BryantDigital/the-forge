@@ -241,10 +241,14 @@ export default defineSchema({
     createdByAuthUserId: v.optional(v.string()),
     status: v.union(
       v.literal("queued"),
+      v.literal("sending"),
       v.literal("sent"),
+      v.literal("partially_failed"),
       v.literal("failed"),
       v.literal("cancelled"),
     ),
+    isTest: v.optional(v.boolean()),
+    testRecipient: v.optional(v.string()),
     error: v.optional(v.string()),
     scheduledFor: v.number(),
     sentAt: v.optional(v.number()),
@@ -253,6 +257,47 @@ export default defineSchema({
     .index("by_status_and_schedule", ["status", "scheduledFor"])
     .index("by_event", ["eventId"])
     .index("by_registration", ["registrationId"]),
+
+  communicationDeliveries: defineTable({
+    communicationId: v.id("communications"),
+    eventId: v.optional(v.id("events")),
+    householdId: v.optional(v.id("households")),
+    registrationId: v.optional(v.id("registrations")),
+    channel: v.union(v.literal("email"), v.literal("sms")),
+    recipient: v.string(),
+    providerMessageId: v.optional(v.string()),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("sent"),
+      v.literal("delivered"),
+      v.literal("failed"),
+      v.literal("undelivered"),
+    ),
+    error: v.optional(v.string()),
+    sentAt: v.optional(v.number()),
+    deliveredAt: v.optional(v.number()),
+    updatedAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_communication", ["communicationId"])
+    .index("by_provider_message", ["providerMessageId"])
+    .index("by_recipient", ["recipient", "createdAt"]),
+
+  smsSuppressions: defineTable({
+    mobilePhone: v.string(),
+    reason: v.union(
+      v.literal("stop"),
+      v.literal("carrier"),
+      v.literal("admin"),
+    ),
+    source: v.union(
+      v.literal("twilio_inbound"),
+      v.literal("twilio_status"),
+      v.literal("admin"),
+    ),
+    suppressedAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_mobile_phone", ["mobilePhone"]),
 
   auditLogs: defineTable({
     actorAuthUserId: v.optional(v.string()),

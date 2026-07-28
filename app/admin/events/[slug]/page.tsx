@@ -63,6 +63,7 @@ export default async function AdminEventPage({
 
         {canManage && (
           <CommunicationComposer
+            eventId={event._id}
             eventTitle={event.title}
             registeredFamilies={event.registeredFamilies}
             registeredSms={event.registeredSms}
