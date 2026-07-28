@@ -75,8 +75,9 @@ supported by real Forge photography.
 - Registration-open and waitlist alerts can be delivered by email, SMS, or both.
 - Admins can target registered families, waitlisted families, or everyone
   attached to an event and see opted-in recipient counts before sending.
-- Mailchimp contact tags segment contacts by event; Convex is the authoritative
-  roster.
+- Convex is the authoritative event roster and communication audience.
+- Twilio SendGrid delivers operational email and the general email list; the
+  project has no Mailchimp dependency.
 
 ### Forge Admin
 
@@ -119,12 +120,12 @@ supported by real Forge photography.
 - Next.js App Router for public pages, parent portal, and Forge Admin.
 - Convex for application records, transactions, scheduled workflows, file
   references, reporting queries, and audit data.
-- Convex + Better Auth for passwordless parents and role-protected staff.
+- Convex + Better Auth Email OTP for passwordless parents and role-protected
+  staff. A verified email automatically creates the account on first login.
 - Stripe Elements, Checkout/Payment Intents, Billing, Customer Portal, and
   signed webhooks.
-- Mailchimp Marketing API for general newsletter contacts and event tags.
-- Mailchimp Transactional for confirmations, reminders, waitlist offers, and
-  admin logistical messages.
+- Twilio SendGrid for sign-in codes, confirmations, reminders, waitlist offers,
+  general email subscriptions, and admin logistical messages.
 - Twilio Messaging Services for registration-open alerts, waitlist offers,
   reminders, and admin-composed logistical SMS.
 - SMS remains feature-flagged until Twilio credentials, sender registration,
@@ -137,7 +138,7 @@ supported by real Forge photography.
 - Protect admin operations with server-side authorization on every function.
 - Store only hashed RSVP management tokens.
 - Version and timestamp waiver, newsletter, and SMS consent.
-- Verify Stripe and Mailchimp webhook signatures.
+- Verify Stripe, Twilio, and SendGrid webhook signatures.
 - Record privileged event, registration, attendance, and role changes.
 - Provide retention and deletion procedures before production launch.
 
@@ -148,7 +149,7 @@ supported by real Forge photography.
 3. Guest RSVP, household association, signed management links, and waitlist.
 4. Passwordless My Forge and role-based Forge Admin.
 5. Check-in, print/CSV, volunteer pipeline, audit log, and reporting base.
-6. Mailchimp transactional email and marketing segmentation.
+6. Twilio SendGrid transactional email and audience segmentation.
 7. Stripe donation form, webhooks, giving history, and Customer Portal.
 8. SMS configuration, production security review, accessibility review,
    deployment, redirects, analytics, and launch.

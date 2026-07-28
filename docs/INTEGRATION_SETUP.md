@@ -19,16 +19,25 @@ turning on production delivery.
 Until those values are present, the public form returns a friendly setup
 message and does not pretend the subscription was stored.
 
-## 2. Administrator authentication
+## 2. Passwordless authentication
 
-The Better Auth component and Convex authentication provider are registered.
-After Convex generates its typed API files, finish the Better Auth instance,
-Next.js auth proxy, login page, and role guard for `/admin`.
+The Better Auth component, Email OTP plugin, and Convex authentication provider
+are registered. Parents and staff enter an email address and a six-digit code;
+there are no passwords. The first successful code verification creates the
+account automatically.
+
+Email codes are sent by Twilio SendGrid. Configure these values in the Convex
+deployment:
+
+- `SENDGRID_API_KEY`
+- `SENDGRID_FROM_EMAIL` (must be a verified sender or authenticated domain)
+- `SENDGRID_FROM_NAME` (defaults to `The Forge`)
+- `SENDGRID_REPLY_TO_EMAIL` (optional)
 
 Do not enable admin broadcasts before the owner and event-manager role checks
 are active.
 
-## 3. Twilio
+## 3. Twilio Messaging
 
 1. Create or select a Twilio Messaging Service.
 2. Complete the required US sender registration for the chosen number type.
@@ -44,17 +53,16 @@ are active.
 Every subscription stores the consent version, full consent disclosure,
 acceptance time, normalized phone number, and selected channels.
 
-## 4. Mailchimp
+## 4. Twilio SendGrid
 
-Configure the existing Mailchimp audience for the general newsletter. Use
-Mailchimp Transactional for individual confirmations and operational notices,
-or the Marketing API for true bulk campaigns.
+Use SendGrid for sign-in codes, individual confirmations, operational notices,
+admin broadcasts, and the general Forge email list. Mailchimp is not part of the
+new application.
 
 Required values:
 
-- `MAILCHIMP_API_KEY`
-- `MAILCHIMP_SERVER_PREFIX`
-- `MAILCHIMP_AUDIENCE_ID`
-- `MAILCHIMP_TRANSACTIONAL_API_KEY`
+- `SENDGRID_API_KEY`
+- `SENDGRID_FROM_EMAIL`
+- `SENDGRID_FROM_NAME`
 
 Verify the Forge sending domain before enabling live email delivery.

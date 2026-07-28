@@ -10,9 +10,9 @@ experience, My Forge parent portal, and unified Forge Admin.
 
 - Next.js App Router application
 - Convex application data and scheduled workflows
-- Convex + Better Auth passwordless authentication
+- Convex + Better Auth six-digit email-code authentication
 - Stripe donations and recurring giving
-- Mailchimp marketing segmentation and transactional event messages
+- Twilio SendGrid email and Twilio Messaging SMS
 - Guest-first RSVP, transactional capacity, waitlist offers, and child check-in
 
 The complete agreed scope and delivery milestones are documented in
@@ -53,6 +53,6 @@ The first milestone establishes:
   waitlists, attendance, volunteers, donations, communications, roles, and
   audit logs.
 
-The forms currently demonstrate the intended product experience. Connecting
-them to a live Convex deployment, Stripe account, and Mailchimp account is the
+The application is connected to its Convex deployment. Completing the Stripe,
+Twilio SendGrid, and Twilio Messaging provider configuration is part of the
 next implementation milestone.

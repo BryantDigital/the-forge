@@ -31,7 +31,6 @@ export default defineSchema({
     emergencyContactName: v.string(),
     emergencyContactPhone: v.string(),
     authUserId: v.optional(v.string()),
-    mailchimpContactId: v.optional(v.string()),
     generalEmailOptInAt: v.optional(v.number()),
     smsOptInAt: v.optional(v.number()),
     smsConsentVersion: v.optional(v.string()),
@@ -214,7 +213,7 @@ export default defineSchema({
     householdId: v.optional(v.id("households")),
     registrationId: v.optional(v.id("registrations")),
     channel: v.union(v.literal("email"), v.literal("sms")),
-    provider: v.union(v.literal("mailchimp"), v.literal("twilio")),
+    provider: v.union(v.literal("sendgrid"), v.literal("twilio")),
     kind: v.union(
       v.literal("confirmation"),
       v.literal("week_reminder"),

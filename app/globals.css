@@ -1213,29 +1213,6 @@ blockquote cite {
   font-size: clamp(2.3rem, 5vw, 3.8rem);
 }
 
-.auth-mode-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin-bottom: 34px;
-  border: 1px solid var(--line);
-}
-
-.auth-mode-toggle button {
-  min-height: 50px;
-  border: 0;
-  background: transparent;
-  color: var(--smoke);
-  font: 700 0.84rem/1 var(--font-display);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.auth-mode-toggle button.is-selected {
-  background: var(--ink);
-  color: white;
-}
-
 .account-auth-form {
   margin-top: 28px;
 }
@@ -1244,6 +1221,31 @@ blockquote cite {
   display: block;
   margin-top: 7px;
   color: var(--smoke);
+}
+
+.account-code-input {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: 0.36em;
+}
+
+.account-code-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.account-code-actions .text-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.account-code-actions .text-link:disabled {
+  opacity: 0.45;
+  cursor: wait;
 }
 
 .account-auth-card__fine-print {

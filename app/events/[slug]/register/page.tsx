@@ -76,7 +76,8 @@ export default function RegisterPage() {
               </button>
               <p style={{ margin: "15px 0 0", color: "var(--smoke)", fontSize: ".82rem" }}>
                 No account or password required. We&apos;ll email a secure link to
-                edit or cancel this registration.
+                edit or cancel this registration. Your email will connect the RSVP
+                to your account whenever you choose to sign in with a one-time code.
               </p>
             </aside>
           </form>

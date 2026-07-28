@@ -23,7 +23,7 @@ export function CommunicationComposer() {
         <div>
           <p className="eyebrow">Event communications</p>
           <h2>Message families</h2>
-          <p>Send a logistical update by Mailchimp email, Twilio SMS, or both.</p>
+          <p>Send a logistical update by Twilio SendGrid email, Twilio SMS, or both.</p>
         </div>
         <span className="communication-status communication-status--setup">
           <i /> Provider setup required

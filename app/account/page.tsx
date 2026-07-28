@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ForgeFooter, ForgeHeader, SectionEyebrow } from "../components";
 import { AuthCard } from "./auth-card";
 
-export const metadata: Metadata = { title: "Login / Sign up" };
+export const metadata: Metadata = { title: "Login" };
 
 export default function AccountPage() {
   return (
@@ -12,7 +12,7 @@ export default function AccountPage() {
       <main>
         <header className="interior-header">
           <div className="shell">
-            <SectionEyebrow>Login / Sign up</SectionEyebrow>
+            <SectionEyebrow>Secure login</SectionEyebrow>
             <h1>Your family. One place.</h1>
             <p>Access saved children, upcoming registrations, event history, and giving.</p>
           </div>
