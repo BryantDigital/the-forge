@@ -477,7 +477,10 @@ export const queueAutomatedReminder = internalMutation({
       : `${event.title} is one week away. It starts at ${formatTime(event.startsAt)} at ${event.locationName}. Bring a water bottle, Bible, and Forge shirt.`;
     const now = Date.now();
     const ids: Id<"communications">[] = [];
-    for (const channel of ["email", "sms"] as const) {
+    const channels = process.env.SMS_ENABLED === "true"
+      ? (["email", "sms"] as const)
+      : (["email"] as const);
+    for (const channel of channels) {
       const communicationId = await ctx.db.insert("communications", {
         eventId: event._id,
         channel,

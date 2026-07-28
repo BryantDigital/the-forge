@@ -1,7 +1,9 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import Link from "next/link";
 import { useState } from "react";
+import { api } from "../../../../convex/_generated/api";
 import { RSVP_SMS_CONSENT_TEXT, type RsvpRequest } from "../../../../lib/rsvp";
 import { SectionEyebrow } from "../../../components";
 
@@ -26,6 +28,7 @@ export function RegistrationForm({
   mode: "registration" | "waitlist";
   remaining: number;
 }) {
+  const account = useQuery(api.registrations.getMyAccount);
   const [children, setChildren] = useState<ChildDraft[]>([newChild(1)]);
   const [nextKey, setNextKey] = useState(2);
   const [status, setStatus] = useState<
@@ -131,6 +134,45 @@ export function RegistrationForm({
         </div>
 
         <div className="registration-children">
+          {(account?.savedChildren.length ?? 0) > 0 && (
+            <div className="saved-child-picker registration-saved-children">
+              <span>Quick add from your family account</span>
+              <div>
+                {account?.savedChildren.map((saved) => (
+                  <button
+                    type="button"
+                    key={saved.id}
+                    disabled={children.some(
+                      (child) =>
+                        child.firstName.toLowerCase() === saved.firstName.toLowerCase() &&
+                        child.lastName.toLowerCase() === saved.lastName.toLowerCase() &&
+                        child.birthDate === saved.birthDate,
+                    )}
+                    onClick={() => {
+                      const draft: ChildDraft = {
+                        key: nextKey,
+                        firstName: saved.firstName,
+                        lastName: saved.lastName,
+                        birthDate: saved.birthDate,
+                        statedAge: String(saved.age),
+                        allergies: saved.allergies ?? "",
+                        notes: saved.notes ?? "",
+                      };
+                      setChildren((current) => {
+                        if (current.length === 1 && isBlankChild(current[0])) {
+                          return [{ ...draft, key: current[0].key }];
+                        }
+                        return current.length < 10 ? [...current, draft] : current;
+                      });
+                      setNextKey((current) => current + 1);
+                    }}
+                  >
+                    {saved.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {children.map((child, index) => (
             <section className="registration-child" key={child.key}>
               <div className="registration-child__heading">
@@ -305,4 +347,8 @@ function newChild(key: number): ChildDraft {
     allergies: "",
     notes: "",
   };
+}
+
+function isBlankChild(child: ChildDraft) {
+  return !child.firstName && !child.lastName && !child.birthDate && !child.statedAge;
 }

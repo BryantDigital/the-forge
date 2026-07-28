@@ -312,13 +312,41 @@ h3 {
   margin: 24px 0;
 }
 
+.manage-participant-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.manage-participant-heading h2 {
+  margin-bottom: 0;
+}
+
+.button--outline-dark {
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+}
+
+.button--outline-dark:hover {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.managed-child-card {
+  position: relative;
+  border: 1px solid #dedad2;
+  background: var(--white);
+}
+
 .managed-child {
   display: grid;
   align-items: center;
   grid-template-columns: auto 1fr auto;
   gap: 14px;
-  border: 1px solid #dedad2;
-  background: var(--white);
+  border: 0;
+  background: transparent;
   padding: 15px;
 }
 
@@ -339,8 +367,98 @@ h3 {
   font-style: normal;
 }
 
-.managed-child.is-cancelled {
+.managed-child-card.is-cancelled {
   opacity: 0.58;
+}
+
+.participant-edit-link {
+  margin: -7px 15px 14px 49px;
+  border: 0;
+  background: transparent;
+  color: var(--red);
+  cursor: pointer;
+  font: 800 0.72rem/1 var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.participant-editor {
+  margin: 22px 0;
+  border: 1px solid #cbc4b9;
+  background:
+    linear-gradient(135deg, rgba(184, 25, 33, 0.05), transparent 55%),
+    #f5f2ec;
+  padding: clamp(20px, 4vw, 28px);
+}
+
+.participant-editor--inline {
+  margin: 0;
+  border-width: 1px 0 0;
+}
+
+.participant-editor h3 {
+  margin: 0 0 18px;
+  font-size: 1.45rem;
+}
+
+.participant-fields textarea {
+  min-height: 88px;
+}
+
+.participant-waiver {
+  margin: 20px 0;
+  color: var(--ink);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.saved-child-picker {
+  margin-bottom: 20px;
+}
+
+.saved-child-picker > span {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--smoke);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.saved-child-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.saved-child-picker button {
+  border: 1px solid #bdb6ac;
+  border-radius: 999px;
+  background: var(--white);
+  padding: 8px 12px;
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.saved-child-picker button:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.saved-child-picker button:disabled {
+  border-color: #ddd7ce;
+  color: #9a948b;
+  cursor: default;
+  text-decoration: line-through;
+}
+
+.registration-saved-children {
+  margin: 30px 0 8px;
+  border-left: 3px solid var(--red);
+  background: #f2eee7;
+  padding: 18px;
 }
 
 .manage-cancel-button {

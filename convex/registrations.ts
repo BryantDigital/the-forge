@@ -12,6 +12,8 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { authComponent } from "./auth";
 
+const WAIVER_VERSION = "forge-participation-v1";
+
 const childInput = v.object({
   firstName: v.string(),
   lastName: v.string(),
@@ -273,7 +275,12 @@ export const getManaged = query({
       children: children.map((child) => ({
         id: child._id,
         name: `${child.firstName} ${child.lastName}`,
+        firstName: child.firstName,
+        lastName: child.lastName,
+        birthDate: child.birthDate,
         age: child.statedAge,
+        allergies: child.allergies,
+        notes: child.notes,
         status: child.status,
       })),
     };
@@ -364,14 +371,24 @@ export const getMyAccount = query({
     return {
       household: {
         parentName: `${identity.household.parentFirstName} ${identity.household.parentLastName}`,
+        parentFirstName: identity.household.parentFirstName,
+        parentLastName: identity.household.parentLastName,
         email: identity.household.email,
+        mobilePhone: identity.household.mobilePhone,
+        emergencyContactName: identity.household.emergencyContactName,
+        emergencyContactPhone: identity.household.emergencyContactPhone,
       },
       savedChildren: savedChildren
         .filter((child) => !child.archivedAt)
         .map((child) => ({
           id: child._id,
           name: `${child.firstName} ${child.lastName}`,
+          firstName: child.firstName,
+          lastName: child.lastName,
+          birthDate: child.birthDate,
           age: child.statedAge,
+          allergies: child.allergies,
+          notes: child.notes,
         })),
       registrations: registrationRows
         .filter((row) => row !== null)
@@ -423,7 +440,12 @@ export const getMyRegistration = query({
       children: children.map((child) => ({
         id: child._id,
         name: `${child.firstName} ${child.lastName}`,
+        firstName: child.firstName,
+        lastName: child.lastName,
+        birthDate: child.birthDate,
         age: child.statedAge,
+        allergies: child.allergies,
+        notes: child.notes,
         status: child.status,
       })),
     };
@@ -454,6 +476,96 @@ export const cancelMyChildren = mutation({
       },
     );
     return result;
+  },
+});
+
+export const addChildren = mutation({
+  args: {
+    managementTokenHash: v.string(),
+    children: v.array(childInput),
+    waiverAccepted: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const registration = await ctx.db
+      .query("registrations")
+      .withIndex("by_management_token", (range) =>
+        range.eq("managementTokenHash", args.managementTokenHash),
+      )
+      .unique();
+    if (!registration) throw new ConvexError("Registration not found.");
+    return addChildrenToRegistration(
+      ctx,
+      registration,
+      args.children,
+      args.waiverAccepted,
+    );
+  },
+});
+
+export const addMyChildren = mutation({
+  args: {
+    registrationId: v.id("registrations"),
+    children: v.array(childInput),
+    waiverAccepted: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getHouseholdIdentity(ctx);
+    if (!identity) throw new ConvexError("Sign in to manage this registration.");
+    const registration = await ctx.db.get(args.registrationId);
+    if (!registration || registration.householdId !== identity.household._id) {
+      throw new ConvexError("Registration not found.");
+    }
+    return addChildrenToRegistration(
+      ctx,
+      registration,
+      args.children,
+      args.waiverAccepted,
+    );
+  },
+});
+
+export const updateChild = mutation({
+  args: {
+    managementTokenHash: v.string(),
+    registrationChildId: v.id("registrationChildren"),
+    child: childInput,
+  },
+  handler: async (ctx, args) => {
+    const registration = await ctx.db
+      .query("registrations")
+      .withIndex("by_management_token", (range) =>
+        range.eq("managementTokenHash", args.managementTokenHash),
+      )
+      .unique();
+    if (!registration) throw new ConvexError("Registration not found.");
+    return updateRegistrationChild(
+      ctx,
+      registration,
+      args.registrationChildId,
+      args.child,
+    );
+  },
+});
+
+export const updateMyChild = mutation({
+  args: {
+    registrationId: v.id("registrations"),
+    registrationChildId: v.id("registrationChildren"),
+    child: childInput,
+  },
+  handler: async (ctx, args) => {
+    const identity = await getHouseholdIdentity(ctx);
+    if (!identity) throw new ConvexError("Sign in to manage this registration.");
+    const registration = await ctx.db.get(args.registrationId);
+    if (!registration || registration.householdId !== identity.household._id) {
+      throw new ConvexError("Registration not found.");
+    }
+    return updateRegistrationChild(
+      ctx,
+      registration,
+      args.registrationChildId,
+      args.child,
+    );
   },
 });
 
@@ -849,6 +961,212 @@ async function getHouseholdIdentity(ctx: QueryCtx | MutationCtx) {
     )
     .unique();
   return byEmail ? { user, household: byEmail } : null;
+}
+
+async function addChildrenToRegistration(
+  ctx: MutationCtx,
+  registration: Doc<"registrations">,
+  childInputs: Array<{
+    firstName: string;
+    lastName: string;
+    birthDate: string;
+    statedAge: number;
+    allergies?: string;
+    notes?: string;
+  }>,
+  waiverAccepted: boolean,
+) {
+  if (!waiverAccepted) {
+    throw new ConvexError("Agree to the participation waiver for the added children.");
+  }
+  if (registration.status === "cancelled") {
+    throw new ConvexError("This registration is no longer active.");
+  }
+  if (childInputs.length < 1 || childInputs.length > 10) {
+    throw new ConvexError("Add between one and 10 children.");
+  }
+  const event = await ctx.db.get(registration.eventId);
+  if (!event || event.status !== "published" || Date.now() >= event.registrationClosesAt) {
+    throw new ConvexError("Registration changes are closed for this event.");
+  }
+  const existingRegistrationChildren = await ctx.db
+    .query("registrationChildren")
+    .withIndex("by_registration", (range) =>
+      range.eq("registrationId", registration._id),
+    )
+    .collect();
+  const activeCount = existingRegistrationChildren.filter(
+    (child) => child.status === "active",
+  ).length;
+  if (activeCount + childInputs.length > 10) {
+    throw new ConvexError("A registration can include up to 10 active children.");
+  }
+  if (activeCount + childInputs.length > event.capacity) {
+    throw new ConvexError("This family request is larger than the event capacity.");
+  }
+  if (registration.status === "confirmed" || registration.status === "offered") {
+    const capacity = await capacitySnapshot(ctx, event._id);
+    if (childInputs.length > capacity.remaining) {
+      throw new ConvexError(
+        `Only ${capacity.remaining} additional ${capacity.remaining === 1 ? "spot is" : "spots are"} available.`,
+      );
+    }
+  }
+
+  const children = childInputs.map(validateChildData);
+  const savedChildren = await ctx.db
+    .query("children")
+    .withIndex("by_household", (range) =>
+      range.eq("householdId", registration.householdId),
+    )
+    .collect();
+  const now = Date.now();
+  const addedIds: Id<"registrationChildren">[] = [];
+  for (const child of children) {
+    const existing = savedChildren.find(
+      (candidate) =>
+        candidate.firstName.toLowerCase() === child.firstName.toLowerCase() &&
+        candidate.lastName.toLowerCase() === child.lastName.toLowerCase() &&
+        candidate.birthDate === child.birthDate,
+    );
+    let childId: Id<"children">;
+    if (existing) {
+      childId = existing._id;
+      await ctx.db.patch(childId, {
+        ...child,
+        archivedAt: undefined,
+        updatedAt: now,
+      });
+    } else {
+      childId = await ctx.db.insert("children", {
+        householdId: registration.householdId,
+        ...child,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+    addedIds.push(
+      await ctx.db.insert("registrationChildren", {
+        registrationId: registration._id,
+        eventId: registration.eventId,
+        childId,
+        ...child,
+        status: "active",
+        createdAt: now,
+        updatedAt: now,
+      }),
+    );
+  }
+  const newSeatCount = activeCount + children.length;
+  await ctx.db.patch(registration._id, {
+    seatCount: newSeatCount,
+    waiverVersion: WAIVER_VERSION,
+    waiverAcceptedAt: now,
+    updatedAt: now,
+  });
+  await ctx.db.insert("auditLogs", {
+    action: "registration.children_added",
+    entityType: "registration",
+    entityId: registration._id,
+    summary: `Added ${children.length} child${children.length === 1 ? "" : "ren"} to a registration`,
+    createdAt: now,
+  });
+  if (registration.status === "waitlisted") {
+    await ctx.scheduler.runAfter(0, internal.registrations.processWaitlist, {
+      eventId: registration.eventId,
+    });
+  }
+  return {
+    registrationId: registration._id,
+    addedChildren: children.length,
+    childIds: addedIds,
+    seatCount: newSeatCount,
+    status: registration.status,
+  };
+}
+
+async function updateRegistrationChild(
+  ctx: MutationCtx,
+  registration: Doc<"registrations">,
+  registrationChildId: Id<"registrationChildren">,
+  childInputValue: {
+    firstName: string;
+    lastName: string;
+    birthDate: string;
+    statedAge: number;
+    allergies?: string;
+    notes?: string;
+  },
+) {
+  if (registration.status === "cancelled") {
+    throw new ConvexError("This registration is no longer active.");
+  }
+  const event = await ctx.db.get(registration.eventId);
+  if (!event || Date.now() >= event.registrationClosesAt) {
+    throw new ConvexError("Registration changes are closed for this event.");
+  }
+  const registrationChild = await ctx.db.get(registrationChildId);
+  if (
+    !registrationChild ||
+    registrationChild.registrationId !== registration._id ||
+    registrationChild.status !== "active"
+  ) {
+    throw new ConvexError("Participant not found.");
+  }
+  const child = validateChildData(childInputValue);
+  const now = Date.now();
+  await ctx.db.patch(registrationChild._id, {
+    ...child,
+    updatedAt: now,
+  });
+  if (registrationChild.childId) {
+    await ctx.db.patch(registrationChild.childId, {
+      ...child,
+      updatedAt: now,
+    });
+  }
+  await ctx.db.insert("auditLogs", {
+    action: "registration.child_updated",
+    entityType: "registrationChild",
+    entityId: registrationChild._id,
+    summary: `Updated participant ${child.firstName} ${child.lastName}`,
+    createdAt: now,
+  });
+  return {
+    registrationChildId: registrationChild._id,
+    child,
+  };
+}
+
+function validateChildData(child: {
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  statedAge: number;
+  allergies?: string;
+  notes?: string;
+}) {
+  const firstName = child.firstName.trim().slice(0, 100);
+  const lastName = child.lastName.trim().slice(0, 100);
+  const birthDate = child.birthDate.trim();
+  const statedAge = Number(child.statedAge);
+  if (!firstName || !lastName) {
+    throw new ConvexError("Enter the child’s first and last name.");
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || Number.isNaN(Date.parse(birthDate))) {
+    throw new ConvexError(`Enter a valid birth date for ${firstName}.`);
+  }
+  if (!Number.isInteger(statedAge) || statedAge < 1 || statedAge > 21) {
+    throw new ConvexError(`Enter a valid age for ${firstName}.`);
+  }
+  return {
+    firstName,
+    lastName,
+    birthDate,
+    statedAge,
+    allergies: child.allergies?.trim().slice(0, 500) || undefined,
+    notes: child.notes?.trim().slice(0, 500) || undefined,
+  };
 }
 
 async function cancelRegistrationChildren(
