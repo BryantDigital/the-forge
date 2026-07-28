@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ForgeFooter, ForgeHeader, SectionEyebrow } from "../components";
-import { upcomingEvents } from "../data";
+import { getPublishedEvents } from "../../lib/events";
 import { HomeMotion } from "../home-motion";
 
 export const metadata: Metadata = {
@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   description: "Upcoming Forge events for boys ages 9–16 in Virginia Beach.",
 };
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  const upcomingEvents = await getPublishedEvents();
   return (
     <>
       <HomeMotion />
@@ -50,12 +51,12 @@ export default function EventsPage() {
                 <Link className="featured-event__media" href={`/events/${event.slug}`}>
                   <img src={event.image} alt="Forge boys and coaches gathering for an event" />
                   <span className={`status status--${event.status}`}>
-                    {event.status === "scheduled" ? `Registration opens ${event.registrationLabel}` : "Registration open"}
+                    {eventStatusLabel(event)}
                   </span>
                   <div className="featured-event__date">
                     <span>{event.month}</span>
                     <strong>{event.day}</strong>
-                    <small>2026</small>
+                    <small>{event.year ?? "2026"}</small>
                   </div>
                 </Link>
                 <div className="featured-event__content">
@@ -65,7 +66,7 @@ export default function EventsPage() {
                   <div className="featured-event__details">
                     <div><span>Cost</span><strong>Free</strong></div>
                     <div><span>Capacity</span><strong>{event.capacity} boys</strong></div>
-                    <div><span>Status</span><strong>Opens {event.registrationLabel}</strong></div>
+                    <div><span>Status</span><strong>{eventStatusLabel(event)}</strong></div>
                   </div>
                   <div className="featured-event__actions">
                     <Link className="button button--red" href={`/events/${event.slug}`}>
@@ -96,4 +97,19 @@ export default function EventsPage() {
       <ForgeFooter />
     </>
   );
+}
+
+function eventStatusLabel(event: (Awaited<ReturnType<typeof getPublishedEvents>>)[number]) {
+  if (event.status === "scheduled") return `Registration opens ${event.registrationLabel}`;
+  if (event.status === "full") return "Event full · waitlist open";
+  if (event.status === "closed") return "Registration closed";
+  if (event.status === "cancelled") return "Event cancelled";
+  if (
+    event.remaining !== undefined &&
+    event.lowCapacityThreshold !== undefined &&
+    event.remaining <= event.lowCapacityThreshold
+  ) {
+    return `Only ${event.remaining} spots left`;
+  }
+  return "Registration open";
 }

@@ -19,7 +19,7 @@ export function AdminHeader() {
         <Link href="/admin"><img src="/images/forge-logo-white.png" alt="The Forge Admin" /></Link>
         <nav className="admin-nav" aria-label="Admin navigation">
           <Link href="/admin">Dashboard</Link>
-          <Link href="/admin/events/the-forge-september-12">Events</Link>
+          <Link href="/admin">Events</Link>
           <Link href="/admin">Volunteers</Link>
           <Link href="/admin">Communications</Link>
         </nav>

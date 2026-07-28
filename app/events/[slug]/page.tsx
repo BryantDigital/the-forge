@@ -1,16 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ForgeFooter, ForgeHeader, SectionEyebrow } from "../../components";
-import { upcomingEvents } from "../../data";
+import { getPublishedEvent } from "../../../lib/events";
 import { EventNotificationForm } from "../../event-notification-form";
 import { HomeMotion } from "../../home-motion";
 
-export const metadata: Metadata = {
-  title: "The Forge — September 12",
-};
+export const metadata: Metadata = { title: "Event Details" };
 
-export default function EventDetailPage() {
-  const event = upcomingEvents[0];
+export default async function EventDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const event = await getPublishedEvent(slug);
+  if (!event) notFound();
   return (
     <>
       <HomeMotion />
@@ -56,7 +61,7 @@ export default function EventDetailPage() {
             <aside className="event-action-card">
               <div className="event-action-card__status">
                 <span className="status-dot" />
-                Registration opens September 1
+                {eventStatusLabel(event)}
               </div>
               <div className="event-action-card__details">
                 <h3>Event details</h3>
@@ -71,6 +76,7 @@ export default function EventDetailPage() {
                 <EventNotificationForm
                   mode={event.status === "full" ? "waitlist" : "registration"}
                   eventSlug={event.slug}
+                  registrationLabel={event.registrationLabel}
                 />
               <div className="event-action-card__footer">
                 <Link className="text-link" href="/events">← All events</Link>
@@ -82,4 +88,19 @@ export default function EventDetailPage() {
       <ForgeFooter />
     </>
   );
+}
+
+function eventStatusLabel(event: NonNullable<Awaited<ReturnType<typeof getPublishedEvent>>>) {
+  if (event.status === "scheduled") return `Registration opens ${event.registrationLabel}`;
+  if (event.status === "full") return "Event full · waitlist open";
+  if (event.status === "closed") return "Registration closed";
+  if (event.status === "cancelled") return "Event cancelled";
+  if (
+    event.remaining !== undefined &&
+    event.lowCapacityThreshold !== undefined &&
+    event.remaining <= event.lowCapacityThreshold
+  ) {
+    return `Only ${event.remaining} spots left`;
+  }
+  return "Registration is open";
 }

@@ -8,10 +8,27 @@ import { CommunicationComposer } from "./communication-composer";
 
 export const metadata: Metadata = { title: "Event Roster — Forge Admin" };
 
-export default async function AdminEventPage() {
+export default async function AdminEventPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
   const access = await fetchAuthQuery(api.adminAuth.requireEventManager, {
     allowCheckin: true,
   });
+  const event = await fetchAuthQuery(api.events.getAdminBySlug, { slug });
+  if (!event) {
+    return (
+      <div className="admin-shell">
+        <AdminHeader />
+        <main className="shell admin-main">
+          <Link className="text-link" href="/admin">← Dashboard</Link>
+          <div className="admin-title"><h1>Event not found</h1></div>
+        </main>
+      </div>
+    );
+  }
   const canManage = access?.role === "owner" || access?.role === "event_manager";
   const checkedIn = roster.filter((child) => child.checkedIn).length;
   return (
@@ -22,21 +39,22 @@ export default async function AdminEventPage() {
         <div style={{ height: 26 }} />
         <div className="admin-title">
           <div>
-            <p className="eyebrow">September 12, 2026 · Upcoming</p>
-            <h1>The Forge — September 12</h1>
-            <p>Virginia Beach · 3:00–6:00 PM Eastern</p>
+            <p className="eyebrow">{formatDate(event.startsAt)} · {event.status}</p>
+            <h1>{event.title}</h1>
+            <p>{event.city} · {formatTime(event.startsAt)}–{formatTime(event.endsAt)} Eastern</p>
           </div>
           {canManage && (
-            <Link className="button button--red" href="#message-families">
-              Message families
-            </Link>
+            <div className="admin-title__actions">
+              <Link className="button button--ghost" href={`/admin/events/${event.slug}/edit`}>Edit event</Link>
+              <Link className="button button--red" href="#message-families">Message families</Link>
+            </div>
           )}
         </div>
 
         <section className="metric-grid">
-          <div className="metric metric--red"><span>Registered</span><strong>24 / 30</strong></div>
-          <div className="metric"><span>SMS opted in</span><strong>21</strong></div>
-          <div className="metric"><span>Waitlisted</span><strong>4</strong></div>
+          <div className="metric metric--red"><span>Registered</span><strong>{event.registered} / {event.capacity}</strong></div>
+          <div className="metric"><span>Spots left</span><strong>{event.remaining}</strong></div>
+          <div className="metric"><span>Waitlisted</span><strong>{event.waitlisted}</strong></div>
           <div className="metric"><span>Checked in</span><strong>{checkedIn} / {roster.length}</strong></div>
         </section>
 
@@ -75,4 +93,21 @@ export default async function AdminEventPage() {
       </main>
     </div>
   );
+}
+
+function formatDate(timestamp: number) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(timestamp);
+}
+
+function formatTime(timestamp: number) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(timestamp);
 }

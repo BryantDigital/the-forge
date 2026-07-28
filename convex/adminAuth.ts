@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { authComponent } from "./auth";
 
 export const getViewer = query({
@@ -113,3 +114,29 @@ export const requireEventManager = query({
     };
   },
 });
+
+export async function requireAdminAccess(
+  ctx: QueryCtx | MutationCtx,
+  options: { allowCheckin?: boolean } = {},
+) {
+  const user = await authComponent.getAuthUser(ctx);
+  const authUserId = user.userId ?? user._id;
+  const membership = await ctx.db
+    .query("adminMemberships")
+    .withIndex("by_auth_user", (range) => range.eq("authUserId", authUserId))
+    .unique();
+
+  if (
+    !membership ||
+    membership.disabledAt ||
+    (membership.role === "checkin" && !options.allowCheckin)
+  ) {
+    throw new Error("You do not have permission to manage Forge events.");
+  }
+
+  return {
+    authUserId,
+    email: user.email,
+    role: membership.role,
+  };
+}

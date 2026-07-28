@@ -11,9 +11,11 @@ type NotificationMode = "registration" | "waitlist";
 export function EventNotificationForm({
   mode,
   eventSlug,
+  registrationLabel,
 }: {
   mode: NotificationMode;
   eventSlug: string;
+  registrationLabel?: string;
 }) {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [smsEnabled, setSmsEnabled] = useState(true);
@@ -75,7 +77,9 @@ export function EventNotificationForm({
     >
       <div className="event-notification-form__heading">
         <p className="event-notification-form__eyebrow">
-          {mode === "waitlist" ? "Event currently full" : "Registration opens September 1"}
+          {mode === "waitlist"
+            ? "Event currently full"
+            : `Registration opens ${registrationLabel ?? "soon"}`}
         </p>
         <h3>{title}</h3>
         <p>{description}</p>

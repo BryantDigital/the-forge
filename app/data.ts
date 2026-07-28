@@ -1,6 +1,7 @@
-export type EventStatus = "scheduled" | "open" | "full";
+export type EventStatus = "scheduled" | "open" | "full" | "closed" | "cancelled";
 
 export type ForgeEvent = {
+  id?: string;
   slug: string;
   title: string;
   excerpt: string;
@@ -8,6 +9,7 @@ export type ForgeEvent = {
   dateLabel: string;
   month: string;
   day: string;
+  year?: string;
   time: string;
   location: string;
   locationShort: string;
@@ -15,8 +17,12 @@ export type ForgeEvent = {
   capacity: number;
   registered: number;
   waitlisted: number;
+  remaining?: number;
+  lowCapacityThreshold?: number;
   status: EventStatus;
   registrationLabel: string;
+  enrollmentOpensAt?: number;
+  registrationClosesAt?: number;
 };
 
 export const forgeValues = [
