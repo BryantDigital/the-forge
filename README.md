@@ -18,6 +18,10 @@ experience, My Forge parent portal, and unified Forge Admin.
 The complete agreed scope and delivery milestones are documented in
 [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md).
 
+New development sessions should begin with
+[`docs/CODEBASE_HANDOFF.md`](docs/CODEBASE_HANDOFF.md). Keep that handoff
+updated and committed with every major functional release.
+
 ## Local development
 
 Requirements:
