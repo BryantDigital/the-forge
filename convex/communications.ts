@@ -26,7 +26,11 @@ const channelValidator = v.union(
 export const getProviderStatus = query({
   args: {},
   handler: async (ctx) => {
-    await requireAdminAccess(ctx);
+    try {
+      await requireAdminAccess(ctx);
+    } catch {
+      return { email: false, sms: false };
+    }
     return {
       email:
         Boolean(process.env.SENDGRID_API_KEY) &&
@@ -43,7 +47,11 @@ export const getProviderStatus = query({
 export const listEventHistory = query({
   args: { eventId: v.id("events") },
   handler: async (ctx, args) => {
-    await requireAdminAccess(ctx);
+    try {
+      await requireAdminAccess(ctx);
+    } catch {
+      return [];
+    }
     const communications = await ctx.db
       .query("communications")
       .withIndex("by_event", (range) => range.eq("eventId", args.eventId))
