@@ -19,11 +19,16 @@ export function AdminHeader() {
         <Link href="/admin"><img src="/images/forge-logo-white.png" alt="The Forge Admin" /></Link>
         <nav className="admin-nav" aria-label="Admin navigation">
           <Link href="/admin">Dashboard</Link>
-          <Link href="/admin">Events</Link>
+          <Link href="/admin/events">Events</Link>
           {viewer?.admin?.role !== "checkin" && (
             <Link href="/admin/volunteers">Volunteers</Link>
           )}
-          <Link href="/admin">Communications</Link>
+          {viewer?.admin?.role !== "checkin" && (
+            <>
+              <Link href="/admin/families">Families</Link>
+              <Link href="/admin/giving">Giving</Link>
+            </>
+          )}
         </nav>
         <span className="tag">{role}</span>
       </div>

@@ -196,7 +196,7 @@ export default async function AdminEventPage({
             <div>
               <h2>Child check-in</h2>
               <p style={{ margin: "6px 0 0", color: "var(--smoke)" }}>
-                Alphabetical roster · attendance saves immediately
+                Alphabetical roster · first-time status is calculated from prior attendance
               </p>
             </div>
             <RosterActions

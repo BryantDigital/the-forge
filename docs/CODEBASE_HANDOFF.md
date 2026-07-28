@@ -219,8 +219,13 @@ standard Next.js build. Both paths have been used during development.
 ### Forge Admin
 
 - `app/admin/layout.tsx` — server-side admin gate.
-- `app/admin/page.tsx` — dashboard.
+- `app/admin/page.tsx` — real-data executive dashboard with ministry reach,
+  attendance, first-time kids, families, volunteer, event, and giving KPIs.
 - `app/admin/components.tsx` — admin navigation/header.
+- `app/admin/events/page.tsx` — all-event operational performance.
+- `app/admin/families/page.tsx` — household engagement and attendance
+  drill-down.
+- `app/admin/giving/page.tsx` — Stripe-mode-aware donor and gift reporting.
 - `app/admin/events/new/page.tsx` — create event.
 - `app/admin/events/[slug]/edit/page.tsx` — edit event.
 - `app/admin/events/event-form.tsx` — event editor.
@@ -251,6 +256,7 @@ standard Next.js build. Both paths have been used during development.
 - `lib/event-notifications.ts` — event alert validation.
 - `lib/roster-export.ts` — spreadsheet-safe child-roster CSV generation and
   stable download filenames.
+- `lib/attendance.ts` — shared first-time attendance policy.
 - `lib/secure-tokens.ts` — cryptographically secure URL tokens and SHA-256
   hashing.
 - `lib/auth-client.ts` — Better Auth browser client.
@@ -275,6 +281,8 @@ standard Next.js build. Both paths have been used during development.
 - `convex/donations.ts` — Stripe Checkout/Portal actions and webhook
   persistence.
 - `convex/adminAuth.ts` — owner bootstrap and role authorization.
+- `convex/adminDashboard.ts` — executive KPIs, attendance/giving trends, event
+  health, donor aggregation, and household reporting.
 - `convex/auth.ts` — Better Auth configuration and branded SendGrid OTP email.
 - `convex/http.ts` — Better Auth routes plus signed Stripe and Twilio webhooks.
 - `convex/crons.ts` — hourly reminder processing.
@@ -402,6 +410,32 @@ Stores:
 
 Public capacity is derived from active registration children plus temporarily
 offered waitlist seats. Do not add a manually maintained “remaining” field.
+
+### Attendance analytics and first-time status
+
+Attendance is authoritative only when `registrationChildren.checkedInAt` is
+present. Dashboard “kids served” numbers must not be calculated from
+registrations, capacity, or RSVP seat counts.
+
+The first-time policy is dynamic:
+
+- a child is first-time for an event when no checked-in roster record for that
+  saved `childId` belongs to an earlier event;
+- the current event does not disqualify its own first-time status after the
+  child is checked in;
+- the event roster displays this as a calculated badge and the CSV includes the
+  same calculated field;
+- `registrationChildren.by_child` supports the lookup;
+- legacy rows without `childId` cannot reliably establish cross-event identity
+  and should not be manually tagged.
+
+Executive attendance reporting distinguishes:
+
+- child check-ins: attendance instances;
+- unique kids served: distinct saved children with attendance;
+- first-time kids: distinct children whose earliest checked-in event falls in
+  the reporting period;
+- families served: distinct households with at least one child check-in.
 
 ### `registrations`
 
@@ -952,6 +986,8 @@ Verified or implemented:
 - print-optimized child roster with allergies/notes and attendance;
 - authorized, spreadsheet-safe child roster CSV export;
 - durable attendance;
+- dynamic first-time child badges based on prior checked-in attendance;
+- first-time status included in authorized roster CSV exports;
 - passwordless six-digit email login;
 - owner bootstrap and role-aware admin gates;
 - SendGrid sign-in and operational email;
@@ -979,6 +1015,14 @@ Verified or implemented:
 - manual admin volunteer access revocation/restoration;
 - future roster withdrawal when volunteer access is revoked;
 - account and approval email links into the volunteer dashboard.
+- real executive Forge Admin dashboard backed by Convex records;
+- live event health with registration, waitlist, attendance, and volunteer
+  coverage;
+- six-month attendance and giving pulse;
+- year-to-date unique kids served, first-time kids, families served, giving,
+  donors, and prior-year comparisons;
+- event, family, and giving drill-down pages;
+- Stripe live/test mode is visibly labeled in giving reports.
 
 ## 19. Known incomplete, placeholder, or launch-blocking work
 
@@ -1018,9 +1062,16 @@ This section is especially important. Do not infer completion from polished UI.
 
 ### Admin dashboard/reporting
 
-- Volunteer counts and recent applications are live.
-- The dashboard eyebrow date is hardcoded.
-- There is no donation reporting dashboard.
+- The executive dashboard, event health, donor reporting, family reporting,
+  attendance trends, and first-time calculations are live.
+- Giving reports use only the Stripe mode selected by `STRIPE_LIVE_MODE`.
+- Reporting currently scans the relevant Convex tables. This is appropriate for
+  the present dataset but should move to aggregate tables or scheduled rollups
+  before data volume becomes large.
+- There is no date-range selector or CSV export for executive reports yet.
+- There is no donor detail/notes/relationship-management record yet.
+- Communication delivery health is not yet summarized on the executive
+  dashboard.
 - There is no role-management UI.
 - There is no full audit-log UI.
 
@@ -1037,7 +1088,8 @@ This section is especially important. Do not infer completion from polished UI.
 
 - Stripe remains in sandbox mode.
 - Real giving requires the explicit live-mode procedure in section 12.
-- Admin donation reporting and reconciliation UI are not built.
+- Admin donor/gift reporting is built, but formal finance reconciliation,
+  refunds, failed-payment workflows, and accounting exports are not.
 
 ### Content/commerce/launch
 
@@ -1051,8 +1103,10 @@ This section is especially important. Do not infer completion from polished UI.
 
 ### Test coverage
 
-Current tests cover validation and rendered page smoke tests, not the full
-backend state machines. Add Convex integration tests for:
+Current tests include 20 checks covering validation, rendered page smoke tests,
+roster export safety, agreement generation, volunteer access policy, and the
+first-time attendance policy. They do not cover the full backend state
+machines. Add Convex integration tests for:
 
 - concurrent capacity requests;
 - full-family waitlist ordering;
@@ -1068,12 +1122,12 @@ backend state machines. Add Convex integration tests for:
 
 A sensible order from the current state:
 
-1. **Real admin dashboard**
-   - replace hardcoded metrics/activity;
-   - add event volunteer coverage and commitment trends;
-   - donation reporting;
-   - attendance trends;
-   - communication health.
+1. **Reporting depth and communication health**
+   - add report date-range controls and exports;
+   - add donor detail and stewardship notes;
+   - add scheduled aggregate/rollup tables as data volume grows;
+   - summarize communication delivery and provider failures;
+   - add event volunteer coverage targets and commitment trends.
 
 2. **Communications hardening**
    - dedicated Forge Twilio account;

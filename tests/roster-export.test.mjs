@@ -22,7 +22,7 @@ test("exports the authorized child roster as spreadsheet-safe CSV", () => {
     },
   ]);
 
-  assert.match(csv, /"Caleb Smith","12","Peanut allergy, carries ""EpiPen""","Checked in"/);
+  assert.match(csv, /"Caleb Smith","12","No","Peanut allergy, carries ""EpiPen""","Checked in"/);
   assert.match(csv, /"'=HYPERLINK\(""bad""\)"/);
   assert.match(csv, /"Registered"/);
 });

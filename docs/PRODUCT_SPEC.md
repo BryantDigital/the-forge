@@ -95,11 +95,14 @@ supported by real Forge photography.
 - Event manager: event creation/editing, registration, attendance, volunteers,
   and logistical communications.
 - Check-in volunteer: event roster and attendance only.
-- Dashboard with upcoming events, capacity, waitlist, volunteer activity, and
-  attendance snapshots.
+- Executive dashboard with upcoming events, capacity, waitlist, volunteer
+  activity, families, kids served, first-time kids, donors, giving, and
+  attendance trends, with drill-down pages.
 - Create and edit event title, description, image, venue, start/end time,
   enrollment opening, capacity, low-seat threshold, and publication state.
 - Alphabetical child roster with per-child check-in.
+- A child is tagged “First time” dynamically when no earlier event contains a
+  checked-in attendance record for that saved child profile.
 - Attendance is durable and remains available after the event.
 - Printable roster and CSV export.
 - Audit trail for privileged changes.

@@ -3,6 +3,7 @@ export type ExportRosterChild = {
   age: number;
   notes: string;
   checkedIn: boolean;
+  isFirstTime?: boolean;
 };
 
 export function createRosterCsv(
@@ -15,10 +16,11 @@ export function createRosterCsv(
     ["Event date", eventDate],
     ["Generated", new Date().toISOString()],
     [],
-    ["Child", "Age", "Allergies / notes", "Attendance"],
+    ["Child", "Age", "First time", "Allergies / notes", "Attendance"],
     ...children.map((child) => [
       child.name,
       String(child.age),
+      child.isFirstTime ? "Yes" : "No",
       child.notes,
       child.checkedIn ? "Checked in" : "Registered",
     ]),

@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireAdminAccess } from "./adminAuth";
+import { isFirstTimeAtEvent } from "../lib/attendance";
 
 const eventStatus = v.union(
   v.literal("draft"),
@@ -63,7 +64,7 @@ export const getPublishedBySlug = query({
 export const listAdmin = query({
   args: {},
   handler: async (ctx) => {
-    await requireAdminAccess(ctx);
+    await requireAdminAccess(ctx, { allowCheckin: true });
     const events = await ctx.db.query("events").withIndex("by_start").order("desc").collect();
     return Promise.all(events.map((event) => presentEvent(ctx, event)));
   },
@@ -96,20 +97,47 @@ export const getRoster = query({
       .withIndex("by_event_and_last_name", (range) => range.eq("eventId", event._id))
       .collect();
 
-    return children
+    const activeChildren = children
       .filter((child) => child.status === "active")
       .sort(
         (a, b) =>
           a.lastName.localeCompare(b.lastName) ||
           a.firstName.localeCompare(b.firstName),
-      )
-      .map((child) => ({
+      );
+    return Promise.all(activeChildren.map(async (child) => {
+      const priorAttendance = child.childId
+        ? await ctx.db
+            .query("registrationChildren")
+            .withIndex("by_child", (range) => range.eq("childId", child.childId))
+            .collect()
+        : [];
+      const priorEventIds = new Set(
+        priorAttendance
+          .filter(
+            (attendance) =>
+              attendance.status === "active" &&
+              Boolean(attendance.checkedInAt) &&
+              attendance.eventId !== event._id,
+          )
+          .map((attendance) => attendance.eventId),
+      );
+      const priorEvents = await Promise.all(
+        [...priorEventIds].map((eventId) => ctx.db.get(eventId)),
+      );
+      return {
         id: child._id,
         name: `${child.firstName} ${child.lastName}`,
         age: child.statedAge,
         notes: [child.allergies, child.notes].filter(Boolean).join(" · "),
         checkedIn: Boolean(child.checkedInAt),
-      }));
+        isFirstTime: isFirstTimeAtEvent(
+          event.startsAt,
+          priorEvents
+            .filter((priorEvent) => Boolean(priorEvent))
+            .map((priorEvent) => priorEvent!.startsAt),
+        ),
+      };
+    }));
   },
 });
 

@@ -11,6 +11,7 @@ type RosterChild = {
   age: number;
   notes: string;
   checkedIn: boolean;
+  isFirstTime: boolean;
 };
 
 export function RosterTable({ rosterChildren }: { rosterChildren: RosterChild[] }) {
@@ -60,7 +61,12 @@ export function RosterTable({ rosterChildren }: { rosterChildren: RosterChild[] 
                     }}
                   />
                 </td>
-                <td><strong>{child.name}</strong></td>
+                <td>
+                  <strong>{child.name}</strong>
+                  {child.isFirstTime && (
+                    <span className="first-time-badge">First time</span>
+                  )}
+                </td>
                 <td>{child.age}</td>
                 <td>{child.notes || "—"}</td>
                 <td><span className={`tag ${child.checkedIn ? "tag--green" : ""}`}>{child.checkedIn ? "Checked in" : "Registered"}</span></td>
