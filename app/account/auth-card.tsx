@@ -34,6 +34,8 @@ export function AuthCard() {
         <h2>Welcome back, {session.user.name || "Forge family"}.</h2>
         <p>{session.user.email}</p>
 
+        <AccountDashboard />
+
         <div className="account-access-grid">
           <div>
             <span>Family account</span>
@@ -50,8 +52,6 @@ export function AuthCard() {
             </p>
           </div>
         </div>
-
-        <AccountDashboard />
 
         {viewer?.canBootstrapOwner && !viewer.admin && (
           <button

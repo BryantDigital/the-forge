@@ -42,7 +42,7 @@ export default async function AccountRegistrationPage({
                 <div><span>Date</span><strong>{formatDate(registration.event.startsAt)}</strong></div>
                 <div><span>Location</span><strong>{formatLocation(registration.event)}</strong></div>
                 <div><span>Parent</span><strong>{registration.household.parentName}</strong></div>
-                <div><span>Mobile</span><strong>{registration.household.mobilePhone}</strong></div>
+                <div><span>Mobile</span><strong>{formatPhone(registration.household.mobilePhone)}</strong></div>
               </div>
               {registration.status === "waitlisted" && (
                 <p className="registration-waitlist-note">
@@ -99,4 +99,10 @@ function formatLocation(event: {
     event.addressLine1,
     `${event.city}, ${event.state} ${event.postalCode}`,
   ].filter(Boolean).join(" · ");
+}
+
+function formatPhone(phone: string) {
+  const digits = phone.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
+  if (digits.length !== 10) return phone;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
