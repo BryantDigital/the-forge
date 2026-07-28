@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { api } from "../../../../convex/_generated/api";
+import { fetchAuthQuery } from "../../../../lib/auth-server";
 import { roster } from "../../../data";
 import { AdminHeader } from "../../components";
 import { CommunicationComposer } from "./communication-composer";
 
 export const metadata: Metadata = { title: "Event Roster — Forge Admin" };
 
-export default function AdminEventPage() {
+export default async function AdminEventPage() {
+  const access = await fetchAuthQuery(api.adminAuth.requireEventManager, {
+    allowCheckin: true,
+  });
+  const canManage = access?.role === "owner" || access?.role === "event_manager";
   const checkedIn = roster.filter((child) => child.checkedIn).length;
   return (
     <div className="admin-shell">
@@ -20,7 +26,11 @@ export default function AdminEventPage() {
             <h1>The Forge — September 12</h1>
             <p>Virginia Beach · 3:00–6:00 PM Eastern</p>
           </div>
-          <Link className="button button--red" href="#message-families">Message families</Link>
+          {canManage && (
+            <Link className="button button--red" href="#message-families">
+              Message families
+            </Link>
+          )}
         </div>
 
         <section className="metric-grid">
@@ -30,7 +40,7 @@ export default function AdminEventPage() {
           <div className="metric"><span>Checked in</span><strong>{checkedIn} / {roster.length}</strong></div>
         </section>
 
-        <CommunicationComposer />
+        {canManage && <CommunicationComposer />}
 
         <section className="table-card">
           <div className="table-card__header roster-toolbar">

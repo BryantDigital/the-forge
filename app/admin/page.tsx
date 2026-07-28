@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { api } from "../../convex/_generated/api";
+import { fetchAuthQuery } from "../../lib/auth-server";
 import { AdminHeader } from "./components";
 
 export const metadata: Metadata = { title: "Forge Admin" };
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const access = await fetchAuthQuery(api.adminAuth.requireEventManager, {});
+  if (access?.role === "checkin") {
+    redirect("/admin/events/the-forge-september-12");
+  }
+
   return (
     <div className="admin-shell">
       <AdminHeader />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ForgeFooter, ForgeHeader, SectionEyebrow } from "../components";
+import { AuthCard } from "./auth-card";
 
 export const metadata: Metadata = { title: "Login / Sign up" };
 
@@ -17,25 +18,18 @@ export default function AccountPage() {
           </div>
         </header>
         <section className="section section--interior">
-          <div className="shell" style={{ maxWidth: 700 }}>
-            <div className="panel">
-              <h2 style={{ fontSize: "2.7rem" }}>Email me a secure sign-in link.</h2>
+          <div className="shell account-page-shell">
+            <AuthCard />
+            <div className="account-page-aside">
+              <SectionEyebrow>No login required</SectionEyebrow>
+              <h2>RSVP without slowing down.</h2>
               <p>
-                No password required. Use the email address from your event
-                registration or donation and we&apos;ll connect your history automatically.
+                Parents can still register children, join waitlists, and receive
+                event alerts with only their contact information.
               </p>
-              <form className="field-grid">
-                <label className="field field--full">
-                  <span>Email address</span>
-                  <input className="form-control" type="email" placeholder="parent@example.com" />
-                </label>
-                <button className="button button--red field--full" type="submit">Send sign-in link</button>
-              </form>
-              <p style={{ margin: "18px 0 0" }}>
-                Looking for an RSVP? Your confirmation email also contains a
-                secure link to edit or cancel it without signing in.
-              </p>
-              <Link className="text-link" href="/events">View upcoming events →</Link>
+              <Link className="text-link" href="/events">
+                View upcoming events →
+              </Link>
             </div>
           </div>
         </section>

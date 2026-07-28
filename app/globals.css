@@ -1197,6 +1197,121 @@ blockquote cite {
   background: #f8e9e6;
 }
 
+.account-page-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 70px;
+  align-items: start;
+}
+
+.account-auth-card {
+  padding: clamp(28px, 5vw, 54px);
+}
+
+.account-auth-card h2 {
+  margin-bottom: 12px;
+  font-size: clamp(2.3rem, 5vw, 3.8rem);
+}
+
+.auth-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 34px;
+  border: 1px solid var(--line);
+}
+
+.auth-mode-toggle button {
+  min-height: 50px;
+  border: 0;
+  background: transparent;
+  color: var(--smoke);
+  font: 700 0.84rem/1 var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.auth-mode-toggle button.is-selected {
+  background: var(--ink);
+  color: white;
+}
+
+.account-auth-form {
+  margin-top: 28px;
+}
+
+.account-auth-form small {
+  display: block;
+  margin-top: 7px;
+  color: var(--smoke);
+}
+
+.account-auth-card__fine-print {
+  margin: 22px 0 0;
+  color: var(--smoke);
+  font-size: 0.9rem;
+}
+
+.account-page-aside {
+  padding-top: 34px;
+}
+
+.account-page-aside h2 {
+  margin-bottom: 18px;
+}
+
+.account-access-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  margin: 32px 0;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.account-access-grid > div {
+  padding: 24px;
+  background: var(--paper);
+}
+
+.account-access-grid span,
+.account-access-grid strong {
+  display: block;
+}
+
+.account-access-grid span {
+  color: var(--smoke);
+  font: 700 0.72rem/1 var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.account-access-grid strong {
+  margin: 10px 0;
+  font: 700 1.45rem/1.1 var(--font-display);
+  text-transform: uppercase;
+}
+
+.account-access-grid p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.account-owner-button {
+  padding: 0 18px;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.account-actions .choice {
+  padding: 0 20px;
+}
+
 .event-action-card__footer {
   border-top: 1px solid #ded9d1;
   padding: 18px 28px 22px;
@@ -2701,6 +2816,19 @@ td {
   .event-action-card__footer {
     padding-right: 20px;
     padding-left: 20px;
+  }
+
+  .account-page-shell {
+    grid-template-columns: 1fr;
+    gap: 38px;
+  }
+
+  .account-page-aside {
+    padding-top: 0;
+  }
+
+  .account-access-grid {
+    grid-template-columns: 1fr;
   }
 
   .communication-card__header,

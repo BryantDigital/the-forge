@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Oswald, Source_Sans_3 } from "next/font/google";
+import { ConvexClientProvider } from "./convex-client-provider";
 import "./globals.css";
 
 const display = Oswald({
@@ -46,7 +47,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${display.variable} ${body.variable}`}>{children}</body>
+      <body className={`${display.variable} ${body.variable}`}>
+        <ConvexClientProvider>{children}</ConvexClientProvider>
+      </body>
     </html>
   );
 }

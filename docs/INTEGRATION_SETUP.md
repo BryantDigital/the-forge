@@ -13,6 +13,8 @@ turning on production delivery.
 4. Deploy the schema and `eventNotifications:subscribe` mutation.
 5. Add `CONVEX_URL`, `NEXT_PUBLIC_CONVEX_URL`, and
    `NEXT_PUBLIC_CONVEX_SITE_URL` to Vercel and Sites.
+6. Set `FORGE_OWNER_EMAILS` in Convex to the comma-separated addresses that may
+   activate the owner role.
 
 Until those values are present, the public form returns a friendly setup
 message and does not pretend the subscription was stored.
