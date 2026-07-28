@@ -7,9 +7,10 @@ import {
   mutation,
   query,
 } from "./_generated/server";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { authComponent } from "./auth";
 
 const childInput = v.object({
   firstName: v.string(),
@@ -279,6 +280,216 @@ export const getManaged = query({
   },
 });
 
+export const connectMyHousehold = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await authComponent.getAuthUser(ctx);
+    const authUserId = user.userId ?? user._id;
+    const household = await ctx.db
+      .query("households")
+      .withIndex("by_normalized_email", (range) =>
+        range.eq("normalizedEmail", user.email.toLowerCase()),
+      )
+      .unique();
+
+    if (!household) return { connected: false };
+    if (household.authUserId !== authUserId) {
+      await ctx.db.patch(household._id, {
+        authUserId,
+        updatedAt: Date.now(),
+      });
+    }
+    return { connected: true, householdId: household._id };
+  },
+});
+
+export const getMyAccount = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await getHouseholdIdentity(ctx);
+    if (!identity) return null;
+
+    const [registrations, savedChildren] = await Promise.all([
+      ctx.db
+        .query("registrations")
+        .withIndex("by_household", (range) =>
+          range.eq("householdId", identity.household._id),
+        )
+        .collect(),
+      ctx.db
+        .query("children")
+        .withIndex("by_household", (range) =>
+          range.eq("householdId", identity.household._id),
+        )
+        .collect(),
+    ]);
+
+    const registrationRows = await Promise.all(
+      registrations.map(async (registration) => {
+        const [event, children] = await Promise.all([
+          ctx.db.get(registration.eventId),
+          ctx.db
+            .query("registrationChildren")
+            .withIndex("by_registration", (range) =>
+              range.eq("registrationId", registration._id),
+            )
+            .collect(),
+        ]);
+        if (!event) return null;
+        return {
+          id: registration._id,
+          status: registration.status,
+          seatCount: registration.seatCount,
+          waitlistPosition: registration.waitlistPosition,
+          offerExpiresAt: registration.offerExpiresAt,
+          event: {
+            slug: event.slug,
+            title: event.title,
+            startsAt: event.startsAt,
+            endsAt: event.endsAt,
+            locationName: event.locationName,
+            city: event.city,
+            state: event.state,
+          },
+          isUpcoming: event.startsAt >= Date.now(),
+          children: children.map((child) => ({
+            id: child._id,
+            name: `${child.firstName} ${child.lastName}`,
+            status: child.status,
+          })),
+        };
+      }),
+    );
+
+    return {
+      household: {
+        parentName: `${identity.household.parentFirstName} ${identity.household.parentLastName}`,
+        email: identity.household.email,
+      },
+      savedChildren: savedChildren
+        .filter((child) => !child.archivedAt)
+        .map((child) => ({
+          id: child._id,
+          name: `${child.firstName} ${child.lastName}`,
+          age: child.statedAge,
+        })),
+      registrations: registrationRows
+        .filter((row) => row !== null)
+        .sort((a, b) => b.event.startsAt - a.event.startsAt),
+    };
+  },
+});
+
+export const getMyRegistration = query({
+  args: { registrationId: v.id("registrations") },
+  handler: async (ctx, args) => {
+    const identity = await getHouseholdIdentity(ctx);
+    if (!identity) return null;
+    const registration = await ctx.db.get(args.registrationId);
+    if (!registration || registration.householdId !== identity.household._id) {
+      return null;
+    }
+    const [event, children] = await Promise.all([
+      ctx.db.get(registration.eventId),
+      ctx.db
+        .query("registrationChildren")
+        .withIndex("by_registration", (range) =>
+          range.eq("registrationId", registration._id),
+        )
+        .collect(),
+    ]);
+    if (!event) return null;
+    return {
+      registrationId: registration._id,
+      status: registration.status,
+      seatCount: registration.seatCount,
+      waitlistPosition: registration.waitlistPosition,
+      offerExpiresAt: registration.offerExpiresAt,
+      event: {
+        slug: event.slug,
+        title: event.title,
+        startsAt: event.startsAt,
+        locationName: event.locationName,
+        addressLine1: event.addressLine1,
+        city: event.city,
+        state: event.state,
+        postalCode: event.postalCode,
+      },
+      household: {
+        parentName: `${identity.household.parentFirstName} ${identity.household.parentLastName}`,
+        email: identity.household.email,
+        mobilePhone: identity.household.mobilePhone,
+      },
+      children: children.map((child) => ({
+        id: child._id,
+        name: `${child.firstName} ${child.lastName}`,
+        age: child.statedAge,
+        status: child.status,
+      })),
+    };
+  },
+});
+
+export const cancelMyChildren = mutation({
+  args: {
+    registrationId: v.id("registrations"),
+    childIds: v.array(v.id("registrationChildren")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getHouseholdIdentity(ctx);
+    if (!identity) {
+      throw new ConvexError("Sign in to manage this registration.");
+    }
+    const registration = await ctx.db.get(args.registrationId);
+    if (!registration || registration.householdId !== identity.household._id) {
+      throw new ConvexError("Registration not found.");
+    }
+    const result = await cancelRegistrationChildren(ctx, registration, args.childIds);
+    await ctx.scheduler.runAfter(
+      0,
+      internal.registrations.sendAccountCancellationNotifications,
+      {
+        registrationId: registration._id,
+        cancelledChildren: result.cancelledChildren,
+      },
+    );
+    return result;
+  },
+});
+
+export const claimMyOffer = mutation({
+  args: { registrationId: v.id("registrations") },
+  handler: async (ctx, args) => {
+    const identity = await getHouseholdIdentity(ctx);
+    if (!identity) {
+      throw new ConvexError("Sign in to claim these seats.");
+    }
+    const registration = await ctx.db.get(args.registrationId);
+    if (
+      !registration ||
+      registration.householdId !== identity.household._id ||
+      registration.status !== "offered" ||
+      !registration.offerExpiresAt ||
+      registration.offerExpiresAt <= Date.now()
+    ) {
+      throw new ConvexError("This waitlist offer is invalid or has expired.");
+    }
+    await ctx.db.patch(registration._id, {
+      status: "confirmed",
+      offerTokenHash: undefined,
+      updatedAt: Date.now(),
+    });
+    await ctx.db.insert("auditLogs", {
+      action: "waitlist.offer_claimed",
+      entityType: "registration",
+      entityId: registration._id,
+      summary: `Claimed a ${registration.seatCount}-seat waitlist offer from account`,
+      createdAt: Date.now(),
+    });
+    return { registrationId: registration._id, status: "confirmed" as const };
+  },
+});
+
 export const cancelChildren = mutation({
   args: {
     managementTokenHash: v.string(),
@@ -294,64 +505,7 @@ export const cancelChildren = mutation({
     if (!registration || registration.status === "cancelled") {
       throw new ConvexError("This registration is no longer active.");
     }
-    const children = await ctx.db
-      .query("registrationChildren")
-      .withIndex("by_registration", (range) =>
-        range.eq("registrationId", registration._id),
-      )
-      .collect();
-    const requestedIds = new Set(args.childIds);
-    const cancellable = children.filter(
-      (child) => child.status === "active" && requestedIds.has(child._id),
-    );
-    if (cancellable.length < 1) {
-      throw new ConvexError("Select at least one active child to cancel.");
-    }
-
-    const now = Date.now();
-    for (const child of cancellable) {
-      await ctx.db.patch(child._id, {
-        status: "cancelled",
-        cancelledAt: now,
-        checkedInAt: undefined,
-        checkedInByAuthUserId: undefined,
-        updatedAt: now,
-      });
-    }
-    const activeCount = children.filter(
-      (child) => child.status === "active" && !requestedIds.has(child._id),
-    ).length;
-    const releasedReservedSeats =
-      registration.status === "confirmed" || registration.status === "offered";
-    await ctx.db.patch(registration._id, {
-      seatCount: activeCount,
-      status: activeCount === 0 ? "cancelled" : registration.status,
-      cancelledAt: activeCount === 0 ? now : undefined,
-      offerTokenHash: activeCount === 0 ? undefined : registration.offerTokenHash,
-      offerExpiresAt: activeCount === 0 ? undefined : registration.offerExpiresAt,
-      offeredAt: activeCount === 0 ? undefined : registration.offeredAt,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert("auditLogs", {
-      action: "registration.children_cancelled",
-      entityType: "registration",
-      entityId: registration._id,
-      summary: `Cancelled ${cancellable.length} child${cancellable.length === 1 ? "" : "ren"} from a registration`,
-      createdAt: now,
-    });
-
-    if (releasedReservedSeats || registration.status === "waitlisted") {
-      await ctx.scheduler.runAfter(0, internal.registrations.processWaitlist, {
-        eventId: registration.eventId,
-      });
-    }
-    return {
-      registrationId: registration._id,
-      cancelledChildren: cancellable.length,
-      remainingChildren: activeCount,
-      status: activeCount === 0 ? ("cancelled" as const) : registration.status,
-    };
+    return cancelRegistrationChildren(ctx, registration, args.childIds);
   },
 });
 
@@ -431,6 +585,21 @@ export const getEmailContext = internalQuery({
   },
 });
 
+export const sendAccountCancellationNotifications = internalAction({
+  args: {
+    registrationId: v.id("registrations"),
+    cancelledChildren: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const context = await ctx.runQuery(internal.registrations.getEmailContext, {
+      registrationId: args.registrationId,
+    });
+    if (!context) return { sent: false };
+    await deliverCancellationEmails(context, args.cancelledChildren);
+    return { sent: true };
+  },
+});
+
 export const sendConfirmation = action({
   args: {
     registrationId: v.id("registrations"),
@@ -449,16 +618,19 @@ export const sendConfirmation = action({
     await sendEmail({
       to: context.household.email,
       subject: confirmed
-        ? `You’re registered for ${context.event.title}`
-        : `You’re on the waitlist for ${context.event.title}`,
+        ? `Confirmed: ${context.event.title}`
+        : `Waitlist confirmed: ${context.event.title}`,
       text: confirmed
-        ? `Your ${context.registration.seatCount}-seat registration is confirmed. Manage or cancel your registration: ${manageUrl}`
-        : `Your family is on the waitlist for ${context.registration.seatCount} seats. We will email you if enough seats open for your entire request. Manage your registration: ${manageUrl}`,
+        ? `You're in. Your ${context.registration.seatCount}-seat registration for ${context.event.title} is confirmed. Manage or cancel your registration: ${manageUrl}`
+        : `Your family is on the waitlist for ${context.registration.seatCount} seats at ${context.event.title}. We will contact you if enough seats open for your entire request. Manage your registration: ${manageUrl}`,
       html: emailFrame(
+        confirmed ? "You’re in." : "You’re on the list.",
+        `<p style="margin:0 0 18px">Hi ${escapeHtml(context.household.parentFirstName)},</p>
+         <p style="margin:0 0 22px">Your family has <strong>${context.registration.seatCount} ${confirmed ? "confirmed" : "waitlisted"} seat${context.registration.seatCount === 1 ? "" : "s"}</strong> for ${escapeHtml(context.event.title)}.</p>
+         ${eventDetailsEmail(context.event)}
+         <p style="margin:22px 0">${confirmed ? "We’ll send the practical details again before the event." : "When enough seats open for your entire request, you’ll receive a 24-hour offer. We never split a family request."}</p>
+         <p style="margin:0"><a href="${manageUrl}" style="${buttonStyle}">Manage reservation&nbsp; →</a></p>`,
         confirmed ? "Registration confirmed" : "Waitlist confirmed",
-        `<p>Your family has <strong>${context.registration.seatCount} ${confirmed ? "confirmed" : "waitlisted"} seat${context.registration.seatCount === 1 ? "" : "s"}</strong> for ${escapeHtml(context.event.title)}.</p>
-         <p>${confirmed ? "We’ll send reminders before the event." : "If enough seats open for your entire family request, you’ll receive a 24-hour offer by email."}</p>
-         <p><a href="${manageUrl}" style="${buttonStyle}">Manage registration</a></p>`,
       ),
     });
     return { sent: true };
@@ -478,25 +650,7 @@ export const sendCancellationNotifications = action({
     if (!context || (await sha256(args.managementToken)) !== context.registration.managementTokenHash) {
       throw new ConvexError("Invalid registration management token.");
     }
-    const detail = `${args.cancelledChildren} child${args.cancelledChildren === 1 ? "" : "ren"} cancelled from ${context.event.title}`;
-    await sendEmail({
-      to: context.household.email,
-      subject: `Registration updated for ${context.event.title}`,
-      text: `${detail}. Your open seats have been returned to the event.`,
-      html: emailFrame("Registration updated", `<p>${escapeHtml(detail)}.</p><p>Any released seats have been returned to the event.</p>`),
-    });
-    const owners = (process.env.FORGE_OWNER_EMAILS ?? "")
-      .split(",")
-      .map((email) => email.trim())
-      .filter(Boolean);
-    for (const email of owners) {
-      await sendEmail({
-        to: email,
-        subject: `Cancellation: ${context.event.title}`,
-        text: `${context.household.parentFirstName} ${context.household.parentLastName}: ${detail}.`,
-        html: emailFrame("Event cancellation", `<p>${escapeHtml(context.household.parentFirstName)} ${escapeHtml(context.household.parentLastName)}: ${escapeHtml(detail)}.</p>`),
-      });
-    }
+    await deliverCancellationEmails(context, args.cancelledChildren);
     return { sent: true };
   },
 });
@@ -584,13 +738,18 @@ export const processWaitlist = internalAction({
     const claimUrl = `${siteUrl}/waitlist/claim/${encodeURIComponent(offerToken)}`;
     await sendEmail({
       to: result.email,
-      subject: `${result.seatCount} Forge seat${result.seatCount === 1 ? "" : "s"} available — claim within 24 hours`,
+      subject: `Action required: your Forge seats are ready`,
       text: `Enough seats opened for your entire family request for ${result.eventTitle}. Claim them within 24 hours: ${claimUrl}`,
       html: emailFrame(
-        "Your family’s seats are ready",
-        `<p>Enough seats opened for your entire <strong>${result.seatCount}-seat</strong> request for ${escapeHtml(result.eventTitle)}.</p>
-         <p>This offer expires in 24 hours.</p>
-         <p><a href="${claimUrl}" style="${buttonStyle}">Claim seats</a></p>`,
+        "Your seats are ready.",
+        `<p style="margin:0 0 18px">Hi ${escapeHtml(result.parentFirstName)},</p>
+         <p style="margin:0 0 20px">Enough room opened for your entire <strong>${result.seatCount}-seat</strong> request for ${escapeHtml(result.eventTitle)}.</p>
+         <div style="margin:22px 0;padding:18px;border-left:4px solid #b81921;background:#f4eee5">
+           <strong style="display:block;color:#111;text-transform:uppercase;letter-spacing:.08em">Held for 24 hours</strong>
+           <span style="display:block;margin-top:6px;color:#5d5851">Claim the complete reservation before this offer moves to the next family.</span>
+         </div>
+         <p style="margin:0"><a href="${claimUrl}" style="${buttonStyle}">Claim all seats&nbsp; →</a></p>`,
+        "Waitlist opening",
       ),
     });
     return { offered: true };
@@ -648,6 +807,93 @@ async function capacitySnapshot(ctx: QueryCtx | MutationCtx, eventId: Id<"events
     0,
   );
   return { capacity: event.capacity, occupied, remaining: Math.max(0, event.capacity - occupied) };
+}
+
+async function getHouseholdIdentity(ctx: QueryCtx | MutationCtx) {
+  const user = await authComponent.safeGetAuthUser(ctx);
+  if (!user) return null;
+  const authUserId = user.userId ?? user._id;
+  const byAuthUser = await ctx.db
+    .query("households")
+    .withIndex("by_auth_user", (range) => range.eq("authUserId", authUserId))
+    .unique();
+  if (byAuthUser) return { user, household: byAuthUser };
+
+  const byEmail = await ctx.db
+    .query("households")
+    .withIndex("by_normalized_email", (range) =>
+      range.eq("normalizedEmail", user.email.toLowerCase()),
+    )
+    .unique();
+  return byEmail ? { user, household: byEmail } : null;
+}
+
+async function cancelRegistrationChildren(
+  ctx: MutationCtx,
+  registration: Doc<"registrations">,
+  childIds: Id<"registrationChildren">[],
+) {
+  if (registration.status === "cancelled") {
+    throw new ConvexError("This registration is no longer active.");
+  }
+  const children = await ctx.db
+    .query("registrationChildren")
+    .withIndex("by_registration", (range) =>
+      range.eq("registrationId", registration._id),
+    )
+    .collect();
+  const requestedIds = new Set(childIds);
+  const cancellable = children.filter(
+    (child) => child.status === "active" && requestedIds.has(child._id),
+  );
+  if (cancellable.length < 1) {
+    throw new ConvexError("Select at least one active child to cancel.");
+  }
+
+  const now = Date.now();
+  for (const child of cancellable) {
+    await ctx.db.patch(child._id, {
+      status: "cancelled",
+      cancelledAt: now,
+      checkedInAt: undefined,
+      checkedInByAuthUserId: undefined,
+      updatedAt: now,
+    });
+  }
+  const activeCount = children.filter(
+    (child) => child.status === "active" && !requestedIds.has(child._id),
+  ).length;
+  const releasedReservedSeats =
+    registration.status === "confirmed" || registration.status === "offered";
+  await ctx.db.patch(registration._id, {
+    seatCount: activeCount,
+    status: activeCount === 0 ? "cancelled" : registration.status,
+    cancelledAt: activeCount === 0 ? now : undefined,
+    offerTokenHash: activeCount === 0 ? undefined : registration.offerTokenHash,
+    offerExpiresAt: activeCount === 0 ? undefined : registration.offerExpiresAt,
+    offeredAt: activeCount === 0 ? undefined : registration.offeredAt,
+    updatedAt: now,
+  });
+
+  await ctx.db.insert("auditLogs", {
+    action: "registration.children_cancelled",
+    entityType: "registration",
+    entityId: registration._id,
+    summary: `Cancelled ${cancellable.length} child${cancellable.length === 1 ? "" : "ren"} from a registration`,
+    createdAt: now,
+  });
+
+  if (releasedReservedSeats || registration.status === "waitlisted") {
+    await ctx.scheduler.runAfter(0, internal.registrations.processWaitlist, {
+      eventId: registration.eventId,
+    });
+  }
+  return {
+    registrationId: registration._id,
+    cancelledChildren: cancellable.length,
+    remainingChildren: activeCount,
+    status: activeCount === 0 ? ("cancelled" as const) : registration.status,
+  };
 }
 
 function randomToken() {
@@ -713,16 +959,126 @@ function requiredEnv(name: string) {
 }
 
 const buttonStyle =
-  "display:inline-block;background:#d11f2f;color:#fff;padding:13px 20px;text-decoration:none;font-weight:700";
+  "display:inline-block;background:#b81921;color:#ffffff;padding:15px 22px;text-decoration:none;font-family:Arial,sans-serif;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase";
 
-function emailFrame(title: string, body: string) {
-  return `<div style="background:#0b0b0c;padding:36px 18px;font-family:Arial,sans-serif;color:#f7f4ee">
-    <div style="max-width:560px;margin:0 auto;border:1px solid #353538;background:#151517;padding:32px">
-      <p style="margin:0 0 10px;color:#d11f2f;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">The Forge</p>
-      <h1 style="margin:0 0 18px;font-size:27px">${escapeHtml(title)}</h1>
-      <div style="color:#d7d4ce;line-height:1.65">${body}</div>
-    </div>
-  </div>`;
+type RegistrationEmailContext = {
+  registration: Doc<"registrations">;
+  event: Doc<"events">;
+  household: Doc<"households">;
+};
+
+async function deliverCancellationEmails(
+  context: RegistrationEmailContext,
+  cancelledChildren: number,
+) {
+  const detail = `${cancelledChildren} child${cancelledChildren === 1 ? "" : "ren"} cancelled from ${context.event.title}`;
+  const accountUrl = `${requiredEnv("SITE_URL").replace(/\/$/, "")}/account`;
+  await sendEmail({
+    to: context.household.email,
+    subject: `Reservation updated: ${context.event.title}`,
+    text: `${detail}. Any released seats have been returned to the event. Review your reservations: ${accountUrl}`,
+    html: emailFrame(
+      "Reservation updated.",
+      `<p style="margin:0 0 18px">Hi ${escapeHtml(context.household.parentFirstName)},</p>
+       <p style="margin:0 0 22px"><strong>${escapeHtml(detail)}.</strong> Any released seats have been returned to the event.</p>
+       ${eventDetailsEmail(context.event)}
+       <p style="margin:22px 0 0"><a href="${accountUrl}" style="${buttonStyle}">Open family account&nbsp; →</a></p>`,
+      "Registration change",
+    ),
+  });
+
+  const owners = (process.env.FORGE_OWNER_EMAILS ?? "")
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean);
+  for (const email of owners) {
+    await sendEmail({
+      to: email,
+      subject: `Cancellation: ${context.event.title}`,
+      text: `${context.household.parentFirstName} ${context.household.parentLastName}: ${detail}.`,
+      html: emailFrame(
+        "A family updated their reservation.",
+        `<p style="margin:0 0 18px"><strong>${escapeHtml(context.household.parentFirstName)} ${escapeHtml(context.household.parentLastName)}</strong></p>
+         <p style="margin:0">${escapeHtml(detail)}. Any released capacity is already available to the next family.</p>`,
+        "Admin notification",
+      ),
+    });
+  }
+}
+
+function eventDetailsEmail(event: Doc<"events">) {
+  const location = [
+    event.locationName,
+    event.addressLine1,
+    `${event.city}, ${event.state} ${event.postalCode}`,
+  ].filter(Boolean).join(" · ");
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:22px 0;border-collapse:collapse;background:#f4eee5;border:1px solid #ddd3c5">
+    <tr>
+      <td style="padding:15px 17px;border-bottom:1px solid #ddd3c5;color:#766e64;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Event</td>
+      <td style="padding:15px 17px;border-bottom:1px solid #ddd3c5;color:#111;font-size:14px;font-weight:700;text-align:right">${escapeHtml(event.title)}</td>
+    </tr>
+    <tr>
+      <td style="padding:15px 17px;border-bottom:1px solid #ddd3c5;color:#766e64;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">When</td>
+      <td style="padding:15px 17px;border-bottom:1px solid #ddd3c5;color:#111;font-size:14px;font-weight:700;text-align:right">${escapeHtml(formatEventEmailDate(event.startsAt))}</td>
+    </tr>
+    <tr>
+      <td style="padding:15px 17px;color:#766e64;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Where</td>
+      <td style="padding:15px 17px;color:#111;font-size:14px;font-weight:700;text-align:right">${escapeHtml(location)}</td>
+    </tr>
+  </table>`;
+}
+
+function formatEventEmailDate(timestamp: number) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(timestamp);
+}
+
+function emailFrame(title: string, body: string, eyebrow = "The Forge") {
+  const siteUrl = (process.env.SITE_URL ?? "https://forgeva.com").replace(/\/$/, "");
+  const logoUrl = `${siteUrl}/images/forge-logo-white.png`;
+  return `<!doctype html>
+  <html lang="en">
+    <body style="margin:0;padding:0;background:#0a0a0b">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#0a0a0b">
+        <tr><td height="6" style="height:6px;background:#b81921"></td></tr>
+        <tr>
+          <td style="padding:34px 16px 42px">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;margin:0 auto;border-collapse:collapse">
+              <tr>
+                <td style="padding:0 4px 26px">
+                  <a href="${siteUrl}" style="text-decoration:none">
+                    <img src="${logoUrl}" width="220" alt="The Forge" style="display:block;width:220px;max-width:70%;height:auto;border:0">
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:38px 38px 40px;background:#f8f4ed;color:#171616;font-family:Arial,Helvetica,sans-serif">
+                  <p style="margin:0 0 12px;color:#b81921;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase">${escapeHtml(eyebrow)}</p>
+                  <h1 style="margin:0 0 22px;color:#0d0d0e;font-family:Impact,'Arial Narrow',Arial,sans-serif;font-size:38px;line-height:1.02;font-weight:800;letter-spacing:.01em;text-transform:uppercase">${escapeHtml(title)}</h1>
+                  <div style="color:#4d4944;font-size:16px;line-height:1.65">${body}</div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:24px 4px 0;color:#908d87;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6">
+                  <strong style="color:#ffffff;letter-spacing:.08em;text-transform:uppercase">Faith · Fitness · Fellowship · Fun</strong><br>
+                  The Forge Christian Ministries · Virginia Beach, Virginia<br>
+                  Questions? Reply to this email and our team will help.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>`;
 }
 
 function escapeHtml(value: string) {

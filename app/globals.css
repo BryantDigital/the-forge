@@ -1486,6 +1486,215 @@ blockquote cite {
   padding: 0 20px;
 }
 
+.account-registrations {
+  margin: 38px 0 8px;
+  padding-top: 34px;
+  border-top: 1px solid var(--line);
+}
+
+.account-registrations--empty {
+  padding: 32px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(184, 25, 33, 0.05), transparent 55%),
+    var(--paper);
+}
+
+.account-registrations--empty h3,
+.account-section-heading h3 {
+  margin: 8px 0 0;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+}
+
+.account-registrations--empty > p:not(.eyebrow) {
+  max-width: 540px;
+  margin: 14px 0 24px;
+}
+
+.account-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.account-event-list {
+  display: grid;
+  gap: 12px;
+}
+
+.account-event-card {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--white);
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.account-event-card:hover {
+  transform: translateY(-2px);
+  border-color: #aaa39a;
+  box-shadow: 0 14px 32px rgba(18, 17, 15, 0.08);
+}
+
+.account-event-card__date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 152px;
+  background: var(--ink);
+  color: var(--white);
+}
+
+.account-event-card__date span {
+  color: var(--red-bright);
+  font: 800 0.72rem/1 var(--font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.account-event-card__date strong {
+  margin-top: 8px;
+  font: 800 2.5rem/1 var(--font-display);
+}
+
+.account-event-card__body {
+  min-width: 0;
+  padding: 22px 24px;
+}
+
+.account-event-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.account-event-card__title h4 {
+  margin: 6px 0 0;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+}
+
+.account-status {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 2px;
+  background: #e8f3ea;
+  color: #245a32;
+  font: 800 0.64rem/1 var(--font-display);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.account-status--waitlisted {
+  background: #f4ead4;
+  color: #755114;
+}
+
+.account-status--offered {
+  background: var(--red);
+  color: var(--white);
+}
+
+.account-status--cancelled {
+  background: #ece9e4;
+  color: #68635c;
+}
+
+.account-manage-button {
+  min-height: 42px;
+  padding: 0 15px;
+  white-space: nowrap;
+}
+
+.account-event-card__meta,
+.account-event-card__children,
+.account-event-card__notice {
+  margin: 12px 0 0;
+  color: var(--smoke);
+  font-size: 0.9rem;
+}
+
+.account-event-card__children {
+  color: var(--ink);
+}
+
+.account-event-card__notice {
+  padding: 10px 12px;
+  background: #f4ead4;
+  color: #654918;
+}
+
+.account-event-card__notice--urgent {
+  background: #f8e5e3;
+  color: #8c1c1c;
+  font-weight: 700;
+}
+
+.account-event-card--compact {
+  opacity: 0.82;
+}
+
+.account-event-card--compact .account-event-card__date {
+  min-height: 124px;
+}
+
+.account-empty-state {
+  padding: 24px;
+  border: 1px dashed #bdb6ac;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.account-empty-state strong {
+  font: 800 1.35rem/1.1 var(--font-display);
+  text-transform: uppercase;
+}
+
+.account-empty-state p {
+  margin: 8px 0 10px;
+  color: var(--smoke);
+}
+
+.account-history {
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.account-history summary {
+  padding: 18px 0;
+  cursor: pointer;
+  font: 800 0.78rem/1 var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.account-manage-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.account-offer-callout {
+  margin: -4px -4px 30px;
+  padding: 24px;
+  border: 1px solid rgba(184, 25, 33, 0.35);
+  background: #f8e8e5;
+}
+
+.account-offer-callout h2 {
+  margin: 8px 0 10px;
+}
+
+.account-offer-callout p {
+  margin: 0 0 18px;
+}
+
 .event-action-card__footer {
   border-top: 1px solid #ded9d1;
   padding: 18px 28px 22px;
@@ -3076,6 +3285,25 @@ td {
 
   .account-access-grid {
     grid-template-columns: 1fr;
+  }
+
+  .account-section-heading,
+  .account-event-card__title,
+  .account-manage-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .account-event-card {
+    grid-template-columns: 68px 1fr;
+  }
+
+  .account-event-card__body {
+    padding: 18px;
+  }
+
+  .account-event-card__date {
+    min-height: 100%;
   }
 
   .communication-card__header,

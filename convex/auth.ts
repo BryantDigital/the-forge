@@ -41,15 +41,40 @@ async function sendSignInCode(email: string, otp: string) {
         {
           type: "text/html",
           value: `
-            <div style="background:#0b0b0c;padding:40px 20px;font-family:Arial,sans-serif;color:#f7f4ee">
-              <div style="max-width:520px;margin:0 auto;border:1px solid #353538;background:#151517;padding:36px">
-                <p style="margin:0 0 12px;color:#d11f2f;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">The Forge</p>
-                <h1 style="margin:0 0 16px;font-size:28px;line-height:1.15">Your sign-in code</h1>
-                <p style="margin:0 0 24px;color:#c9c7c2;line-height:1.6">Enter this one-time code to securely open your Forge account.</p>
-                <div style="background:#080809;border-left:4px solid #d11f2f;padding:20px;text-align:center;font-size:34px;font-weight:800;letter-spacing:9px">${otp}</div>
-                <p style="margin:24px 0 0;color:#8f8e8a;font-size:13px;line-height:1.5">This code expires in 10 minutes. If you did not request it, no action is needed.</p>
-              </div>
-            </div>
+            <!doctype html>
+            <html lang="en">
+              <body style="margin:0;padding:0;background:#0a0a0b">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#0a0a0b">
+                  <tr><td height="6" style="height:6px;background:#b81921"></td></tr>
+                  <tr>
+                    <td style="padding:34px 16px 42px">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;border-collapse:collapse">
+                        <tr>
+                          <td style="padding:0 4px 26px">
+                            <img src="${siteUrl.replace(/\/$/, "")}/images/forge-logo-white.png" width="220" alt="The Forge" style="display:block;width:220px;max-width:70%;height:auto;border:0">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:38px;background:#f8f4ed;color:#171616;font-family:Arial,Helvetica,sans-serif">
+                            <p style="margin:0 0 12px;color:#b81921;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase">Secure family account</p>
+                            <h1 style="margin:0 0 18px;color:#0d0d0e;font-family:Impact,'Arial Narrow',Arial,sans-serif;font-size:38px;line-height:1.02;text-transform:uppercase">Enter the arena.</h1>
+                            <p style="margin:0 0 24px;color:#4d4944;font-size:16px;line-height:1.65">Use this one-time code to securely open your Forge account.</p>
+                            <div style="padding:22px 18px;border-left:5px solid #b81921;background:#111;color:#fff;text-align:center;font-size:36px;font-weight:800;letter-spacing:10px">${otp}</div>
+                            <p style="margin:24px 0 0;color:#706a62;font-size:13px;line-height:1.6">This code expires in 10 minutes. If you did not request it, no action is needed.</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:24px 4px 0;color:#908d87;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6">
+                            <strong style="color:#fff;letter-spacing:.08em;text-transform:uppercase">Faith · Fitness · Fellowship · Fun</strong><br>
+                            The Forge Christian Ministries · Virginia Beach, Virginia
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+            </html>
           `,
         },
       ],

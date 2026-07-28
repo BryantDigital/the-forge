@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import { authClient } from "../../lib/auth-client";
+import { AccountDashboard } from "./account-dashboard";
 
 export function AuthCard() {
   const { data: session, isPending: sessionPending } = authClient.useSession();
@@ -49,6 +50,8 @@ export function AuthCard() {
             </p>
           </div>
         </div>
+
+        <AccountDashboard />
 
         {viewer?.canBootstrapOwner && !viewer.admin && (
           <button
