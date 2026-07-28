@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { api } from "../../../../convex/_generated/api";
 import { fetchAuthQuery } from "../../../../lib/auth-server";
-import { roster } from "../../../data";
 import { AdminHeader } from "../../components";
 import { CommunicationComposer } from "./communication-composer";
+import { RosterTable } from "./roster-table";
 
 export const metadata: Metadata = { title: "Event Roster — Forge Admin" };
 
@@ -18,6 +18,7 @@ export default async function AdminEventPage({
     allowCheckin: true,
   });
   const event = await fetchAuthQuery(api.events.getAdminBySlug, { slug });
+  const roster = await fetchAuthQuery(api.events.getRoster, { slug });
   if (!event) {
     return (
       <div className="admin-shell">
@@ -30,7 +31,8 @@ export default async function AdminEventPage({
     );
   }
   const canManage = access?.role === "owner" || access?.role === "event_manager";
-  const checkedIn = roster.filter((child) => child.checkedIn).length;
+  const rosterChildren = roster ?? [];
+  const checkedIn = rosterChildren.filter((child) => child.checkedIn).length;
   return (
     <div className="admin-shell">
       <AdminHeader />
@@ -55,7 +57,7 @@ export default async function AdminEventPage({
           <div className="metric metric--red"><span>Registered</span><strong>{event.registered} / {event.capacity}</strong></div>
           <div className="metric"><span>Spots left</span><strong>{event.remaining}</strong></div>
           <div className="metric"><span>Waitlisted</span><strong>{event.waitlisted}</strong></div>
-          <div className="metric"><span>Checked in</span><strong>{checkedIn} / {roster.length}</strong></div>
+          <div className="metric"><span>Checked in</span><strong>{checkedIn} / {rosterChildren.length}</strong></div>
         </section>
 
         {canManage && <CommunicationComposer />}
@@ -73,22 +75,7 @@ export default async function AdminEventPage({
               <button className="choice" type="button" style={{ padding: "0 16px" }}>Export CSV</button>
             </div>
           </div>
-          <div className="table-scroll">
-            <table>
-              <thead><tr><th>Here</th><th>Child</th><th>Age</th><th>Notes</th><th>Status</th></tr></thead>
-              <tbody>
-                {roster.map((child) => (
-                  <tr key={child.name}>
-                    <td><input className="roster-check" type="checkbox" defaultChecked={child.checkedIn} aria-label={`Check in ${child.name}`} /></td>
-                    <td><strong>{child.name}</strong></td>
-                    <td>{child.age}</td>
-                    <td>{child.notes || "—"}</td>
-                    <td><span className={`tag ${child.checkedIn ? "tag--green" : ""}`}>{child.checkedIn ? "Checked in" : "Registered"}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <RosterTable children={rosterChildren} />
         </section>
       </main>
     </div>

@@ -81,6 +81,68 @@ export const getAdminBySlug = query({
   },
 });
 
+export const getRoster = query({
+  args: { slug: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdminAccess(ctx, { allowCheckin: true });
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_slug", (range) => range.eq("slug", args.slug))
+      .unique();
+    if (!event) return null;
+
+    const children = await ctx.db
+      .query("registrationChildren")
+      .withIndex("by_event_and_last_name", (range) => range.eq("eventId", event._id))
+      .collect();
+
+    return children
+      .filter((child) => child.status === "active")
+      .sort(
+        (a, b) =>
+          a.lastName.localeCompare(b.lastName) ||
+          a.firstName.localeCompare(b.firstName),
+      )
+      .map((child) => ({
+        id: child._id,
+        name: `${child.firstName} ${child.lastName}`,
+        age: child.statedAge,
+        notes: [child.allergies, child.notes].filter(Boolean).join(" · "),
+        checkedIn: Boolean(child.checkedInAt),
+      }));
+  },
+});
+
+export const setChildCheckIn = mutation({
+  args: {
+    registrationChildId: v.id("registrationChildren"),
+    checkedIn: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const actor = await requireAdminAccess(ctx, { allowCheckin: true });
+    const child = await ctx.db.get(args.registrationChildId);
+    if (!child || child.status !== "active") {
+      throw new ConvexError("This child is not on the active event roster.");
+    }
+
+    await ctx.db.patch(args.registrationChildId, {
+      checkedInAt: args.checkedIn ? Date.now() : undefined,
+      checkedInByAuthUserId: args.checkedIn ? actor.authUserId : undefined,
+      updatedAt: Date.now(),
+    });
+    await ctx.db.insert("auditLogs", {
+      actorAuthUserId: actor.authUserId,
+      actorEmail: actor.email,
+      action: args.checkedIn ? "attendance.checked_in" : "attendance.check_in_removed",
+      entityType: "registrationChild",
+      entityId: args.registrationChildId,
+      summary: `${args.checkedIn ? "Checked in" : "Removed check-in for"} ${child.firstName} ${child.lastName}`,
+      createdAt: Date.now(),
+    });
+    return { checkedIn: args.checkedIn };
+  },
+});
+
 export const create = mutation({
   args: eventFields,
   handler: async (ctx, args) => {
