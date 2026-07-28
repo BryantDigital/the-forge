@@ -179,14 +179,78 @@ export default defineSchema({
     faithResponse: v.string(),
     status: v.union(
       v.literal("new"),
+      v.literal("denied"),
+      v.literal("pending"),
+      v.literal("approved"),
+      // Retained while any early prototype records are migrated.
       v.literal("reviewing"),
       v.literal("contacted"),
       v.literal("closed"),
     ),
     notificationSentAt: v.optional(v.number()),
+    reviewedByAuthUserId: v.optional(v.string()),
+    reviewedByEmail: v.optional(v.string()),
+    reviewedAt: v.optional(v.number()),
+    denialReason: v.optional(v.string()),
+    activeSignatureRequestId: v.optional(v.id("signatureRequests")),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_status_and_created", ["status", "createdAt"]),
+  })
+    .index("by_status_and_created", ["status", "createdAt"])
+    .index("by_email", ["email"]),
+
+  signatureRequests: defineTable({
+    volunteerSubmissionId: v.id("volunteerSubmissions"),
+    templateVersion: v.string(),
+    documentTitle: v.string(),
+    documentBody: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("signed"),
+      v.literal("revoked"),
+      v.literal("expired"),
+    ),
+    tokenHash: v.string(),
+    signerName: v.string(),
+    signerEmail: v.string(),
+    emailSentAt: v.optional(v.number()),
+    emailError: v.optional(v.string()),
+    expiresAt: v.number(),
+    viewedAt: v.optional(v.number()),
+    electronicConsentText: v.string(),
+    electronicConsentAcceptedAt: v.optional(v.number()),
+    signatureText: v.optional(v.string()),
+    signedAt: v.optional(v.number()),
+    signedDocumentStorageId: v.optional(v.id("_storage")),
+    documentSha256: v.optional(v.string()),
+    signerIpAddress: v.optional(v.string()),
+    signerUserAgent: v.optional(v.string()),
+    createdByAuthUserId: v.string(),
+    createdByEmail: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_token_hash", ["tokenHash"])
+    .index("by_volunteer", ["volunteerSubmissionId"])
+    .index("by_status_and_expiration", ["status", "expiresAt"]),
+
+  signatureEvents: defineTable({
+    signatureRequestId: v.id("signatureRequests"),
+    volunteerSubmissionId: v.id("volunteerSubmissions"),
+    type: v.union(
+      v.literal("created"),
+      v.literal("email_sent"),
+      v.literal("viewed"),
+      v.literal("signed"),
+      v.literal("revoked"),
+    ),
+    actorAuthUserId: v.optional(v.string()),
+    actorEmail: v.optional(v.string()),
+    summary: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_request", ["signatureRequestId"])
+    .index("by_volunteer", ["volunteerSubmissionId"]),
 
   donations: defineTable({
     householdId: v.optional(v.id("households")),

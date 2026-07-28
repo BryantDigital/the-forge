@@ -47,3 +47,14 @@ test("server-renders the public event index", async () => {
   assert.match(html, /The Forge — September 12/i);
   assert.match(html, /Registration opens Sep 1/i);
 });
+
+test("server-renders the volunteer application workflow", async () => {
+  const response = await render("/volunteer");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /Select all positions that apply/i);
+  assert.match(html, /Who is Jesus to you/i);
+  assert.match(html, /Submit application/i);
+  assert.match(html, /Accepted volunteers sign a simple agreement/i);
+});

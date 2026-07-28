@@ -17,6 +17,9 @@ import type * as eventNotifications from "../eventNotifications.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
 import type * as registrations from "../registrations.js";
+import type * as volunteerAgreement from "../volunteerAgreement.js";
+import type * as volunteerSignatures from "../volunteerSignatures.js";
+import type * as volunteers from "../volunteers.js";
 
 import type {
   ApiFromModules,
@@ -34,6 +37,9 @@ declare const fullApi: ApiFromModules<{
   events: typeof events;
   http: typeof http;
   registrations: typeof registrations;
+  volunteerAgreement: typeof volunteerAgreement;
+  volunteerSignatures: typeof volunteerSignatures;
+  volunteers: typeof volunteers;
 }>;
 
 /**

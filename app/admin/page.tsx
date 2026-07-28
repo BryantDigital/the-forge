@@ -12,7 +12,10 @@ export default async function AdminPage() {
   if (access?.role === "checkin") {
     redirect("/admin/events/the-forge-september-12");
   }
-  const events = await fetchAuthQuery(api.events.listAdmin, {});
+  const [events, volunteers] = await Promise.all([
+    fetchAuthQuery(api.events.listAdmin, {}),
+    fetchAuthQuery(api.volunteers.getDashboardSummary, {}),
+  ]);
   const nextEvent = [...events]
     .filter((event) => !event.isPast && event.status !== "cancelled")
     .sort((a, b) => a.startsAt - b.startsAt)[0];
@@ -36,7 +39,7 @@ export default async function AdminPage() {
           <div className="metric metric--red"><span>Next event</span><strong>{nextEvent ? daysUntil(nextEvent.timeUntilStartMs) : "None"}</strong></div>
           <div className="metric"><span>Registered boys</span><strong>{registered} / {nextEvent?.capacity ?? 0}</strong></div>
           <div className="metric"><span>Waitlisted</span><strong>{waitlisted}</strong></div>
-          <div className="metric"><span>Open volunteers</span><strong>3</strong></div>
+          <div className="metric"><span>New volunteers</span><strong>{volunteers.newCount}</strong></div>
         </section>
 
         <div className="admin-grid">
@@ -68,20 +71,29 @@ export default async function AdminPage() {
           </section>
 
           <aside className="panel">
-            <h3>Recent activity</h3>
+            <div className="table-card__header">
+              <h3>Recent volunteers</h3>
+              <Link className="text-link" href="/admin/volunteers">View all →</Link>
+            </div>
             <div className="activity-list">
-              <div className="activity">
-                <p>New volunteer application</p>
-                <small>Forge Coach · 2 hours ago</small>
-              </div>
-              <div className="activity">
-                <p>July attendance finalized</p>
-                <small>22 of 30 checked in · 6 days ago</small>
-              </div>
-              <div className="activity">
-                <p>September event published</p>
-                <small>Registration opens Sep 1 · 1 week ago</small>
-              </div>
+              {volunteers.recent.map((volunteer) => (
+                <div className="activity" key={volunteer.id}>
+                  <p>
+                    <Link className="table-link" href={`/admin/volunteers/${volunteer.id}`}>
+                      {volunteer.name}
+                    </Link>
+                  </p>
+                  <small>
+                    {volunteer.roles[0] ?? "Volunteer"} · {formatVolunteerStatus(volunteer.status)}
+                  </small>
+                </div>
+              ))}
+              {volunteers.recent.length === 0 && (
+                <div className="activity">
+                  <p>No volunteer applications yet.</p>
+                  <small>New applications will appear here.</small>
+                </div>
+              )}
             </div>
           </aside>
         </div>
@@ -105,5 +117,10 @@ function formatDate(timestamp: number) {
 }
 
 function formatStatus(status: "draft" | "published" | "cancelled" | "completed") {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function formatVolunteerStatus(status: string) {
+  if (status === "pending") return "Pending signature";
   return status.charAt(0).toUpperCase() + status.slice(1);
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ForgeFooter, ForgeHeader, SectionEyebrow } from "../components";
+import { VolunteerApplicationForm } from "./volunteer-form";
 
 export const metadata: Metadata = { title: "Volunteer" };
 
@@ -172,104 +173,10 @@ export default function VolunteerPage() {
         </header>
 
         <section className="section section--interior">
-          <form className="shell content-grid volunteer-layout">
-            <article>
-              <div className="form-section form-section--first">
-                <SectionEyebrow>Volunteer application</SectionEyebrow>
-                <h2>Bring what you have.</h2>
-                <p className="lede volunteer-lede">
-                  Choose the areas where your skills and experience can make the
-                  biggest impact. A representative from The Forge will contact
-                  you with more information.
-                </p>
-                <div className="field-grid">
-                  <label className="field"><span>First name</span><input className="form-control" required /></label>
-                  <label className="field"><span>Last name</span><input className="form-control" required /></label>
-                  <label className="field"><span>Email address</span><input className="form-control" type="email" required /></label>
-                  <label className="field"><span>Mobile number</span><input className="form-control" type="tel" required /></label>
-                </div>
-              </div>
-
-              <div className="form-section">
-                <SectionEyebrow>Step into the mission</SectionEyebrow>
-                <h2>Select all positions that apply.</h2>
-                <p className="volunteer-intro">
-                  Every role at The Forge serves a purpose—whether it&apos;s leading
-                  from the front, supporting behind the scenes, or calling out
-                  character in the heat of competition. Choose the areas where
-                  your skills and experience can make the biggest impact.
-                </p>
-                <div className="volunteer-role-list">
-                  {roles.map((role) => (
-                    <label className="volunteer-role-card" key={role.title}>
-                      <div>
-                        <h3>{role.title}</h3>
-                        {role.details.map((detail) => (
-                          <p key={detail.label}>
-                            <strong>{detail.label}:</strong> {detail.text}
-                          </p>
-                        ))}
-                      </div>
-                      <span className="volunteer-role-card__choice">
-                        <input type="checkbox" name="roles" value={role.title} />
-                        <span>Sign me up</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-section">
-                <SectionEyebrow>Required affirmation</SectionEyebrow>
-                <h2>Statement of Faith</h2>
-                <div className="faith-list">
-                  {statementOfFaith.map((item) => (
-                    <div className="faith-item" key={item.title}>
-                      <h3>{item.title}</h3>
-                      <p>{item.belief}</p>
-                      <small>Reference: {item.reference}</small>
-                    </div>
-                  ))}
-                </div>
-                <label className="checkbox-row affirmation">
-                  <input type="checkbox" required />
-                  <span>I support and affirm this Statement of Faith.</span>
-                </label>
-              </div>
-
-              <div className="form-section">
-                <SectionEyebrow>Tell us about you</SectionEyebrow>
-                <label className="field field--full">
-                  <span>Who is Jesus to you?</span>
-                  <small>
-                    Whether you&apos;ve known Him your whole life or are just
-                    starting to learn about Him, what does Jesus mean to you today?
-                  </small>
-                  <textarea className="form-control" required />
-                </label>
-                <label className="checkbox-row affirmation">
-                  <input type="checkbox" required />
-                  <span>I am willing to undergo a background check if required for my volunteer role.</span>
-                </label>
-                <button className="button button--red submit-button" type="submit">
-                  Submit application
-                </button>
-              </div>
-            </article>
-
-            <aside className="panel volunteer-aside">
-              <h3>What happens next?</h3>
-              <div className="detail-list">
-                <div><span>01</span><strong>Submit your interests</strong></div>
-                <div><span>02</span><strong>A Forge leader reviews your application</strong></div>
-                <div><span>03</span><strong>We contact you with the right next step</strong></div>
-              </div>
-              <div className="aside-note">
-                <strong>Questions?</strong>
-                <p>Email <a href="mailto:info@forgeva.com">info@forgeva.com</a>.</p>
-              </div>
-            </aside>
-          </form>
+          <VolunteerApplicationForm
+            roles={roles}
+            statementOfFaith={statementOfFaith}
+          />
         </section>
       </main>
       <ForgeFooter />

@@ -20,7 +20,9 @@ export function AdminHeader() {
         <nav className="admin-nav" aria-label="Admin navigation">
           <Link href="/admin">Dashboard</Link>
           <Link href="/admin">Events</Link>
-          <Link href="/admin">Volunteers</Link>
+          {viewer?.admin?.role !== "checkin" && (
+            <Link href="/admin/volunteers">Volunteers</Link>
+          )}
           <Link href="/admin">Communications</Link>
         </nav>
         <span className="tag">{role}</span>
