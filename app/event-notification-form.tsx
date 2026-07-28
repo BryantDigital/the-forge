@@ -1,12 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import {
+  SMS_CONSENT_TEXT,
+  type EventNotificationRequest,
+} from "../lib/event-notifications";
 
 type NotificationMode = "registration" | "waitlist";
 
-export function EventNotificationForm({ mode }: { mode: NotificationMode }) {
+export function EventNotificationForm({
+  mode,
+  eventSlug,
+}: {
+  mode: NotificationMode;
+  eventSlug: string;
+}) {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [smsEnabled, setSmsEnabled] = useState(true);
+  const [status, setStatus] = useState<
+    { type: "idle" } | { type: "submitting" } | { type: "success" } | { type: "error"; message: string }
+  >({ type: "idle" });
 
   const title = mode === "waitlist" ? "Join the waitlist" : "Get registration alerts";
   const description =
@@ -15,7 +28,51 @@ export function EventNotificationForm({ mode }: { mode: NotificationMode }) {
       : "Be first to know when registration opens. Choose email, text, or both.";
 
   return (
-    <form className="event-notification-form" onSubmit={(event) => event.preventDefault()}>
+    <form
+      className="event-notification-form"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        const formElement = event.currentTarget;
+        const form = new FormData(formElement);
+        const payload: EventNotificationRequest = {
+          eventSlug,
+          kind: mode === "waitlist" ? "waitlist" : "registration_open",
+          parentName: String(form.get("parentName") ?? ""),
+          emailEnabled,
+          smsEnabled,
+          email: String(form.get("email") ?? ""),
+          mobilePhone: String(form.get("mobilePhone") ?? ""),
+          smsConsent: form.get("smsConsent") === "on",
+        };
+
+        setStatus({ type: "submitting" });
+
+        try {
+          const response = await fetch("/api/event-notifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const result = (await response.json()) as { error?: string };
+
+          if (!response.ok) {
+            setStatus({
+              type: "error",
+              message: result.error ?? "We could not save your alert. Please try again.",
+            });
+            return;
+          }
+
+          setStatus({ type: "success" });
+          formElement.reset();
+        } catch {
+          setStatus({
+            type: "error",
+            message: "We could not save your alert. Please check your connection and try again.",
+          });
+        }
+      }}
+    >
       <div className="event-notification-form__heading">
         <p className="event-notification-form__eyebrow">
           {mode === "waitlist" ? "Event currently full" : "Registration opens September 1"}
@@ -83,9 +140,7 @@ export function EventNotificationForm({ mode }: { mode: NotificationMode }) {
         <label className="checkbox-row notification-consent">
           <input type="checkbox" name="smsConsent" required />
           <span>
-            I agree to receive event-related text messages from The Forge.
-            Message frequency varies. Message and data rates may apply. Reply
-            STOP to unsubscribe.
+            {SMS_CONSENT_TEXT}
           </span>
         </label>
       )}
@@ -93,11 +148,25 @@ export function EventNotificationForm({ mode }: { mode: NotificationMode }) {
       <button
         className="button button--red event-notification-submit"
         type="submit"
-        disabled={!emailEnabled && !smsEnabled}
+        disabled={!emailEnabled && !smsEnabled || status.type === "submitting"}
       >
-        {mode === "waitlist" ? "Join the waitlist" : "Notify me when it opens"}
+        {status.type === "submitting"
+          ? "Saving your alert…"
+          : mode === "waitlist"
+            ? "Join the waitlist"
+            : "Notify me when it opens"}
         <span aria-hidden="true">→</span>
       </button>
+      <div className="event-notification-form__status" aria-live="polite">
+        {status.type === "success" && (
+          <p className="form-status form-status--success">
+            You&apos;re on the list. We&apos;ll notify you using your selected contact methods.
+          </p>
+        )}
+        {status.type === "error" && (
+          <p className="form-status form-status--error">{status.message}</p>
+        )}
+      </div>
       <p className="event-notification-form__fine-print">
         Operational event notices only. This does not subscribe you to the
         general Forge newsletter.

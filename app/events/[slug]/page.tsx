@@ -68,7 +68,10 @@ export default function EventDetailPage() {
                   <div><span>Capacity</span><strong>{event.capacity} boys</strong></div>
                 </div>
               </div>
-              <EventNotificationForm mode={event.status === "full" ? "waitlist" : "registration"} />
+                <EventNotificationForm
+                  mode={event.status === "full" ? "waitlist" : "registration"}
+                  eventSlug={event.slug}
+                />
               <div className="event-action-card__footer">
                 <Link className="text-link" href="/events">← All events</Link>
               </div>

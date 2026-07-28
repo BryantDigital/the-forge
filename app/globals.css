@@ -1175,6 +1175,28 @@ blockquote cite {
   line-height: 1.4;
 }
 
+.event-notification-form__status:empty {
+  display: none;
+}
+
+.form-status {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid currentColor;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.form-status--success {
+  color: #255d35;
+  background: #e9f3ec;
+}
+
+.form-status--error {
+  color: #8f211a;
+  background: #f8e9e6;
+}
+
 .event-action-card__footer {
   border-top: 1px solid #ded9d1;
   padding: 18px 28px 22px;

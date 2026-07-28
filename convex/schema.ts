@@ -131,22 +131,26 @@ export default defineSchema({
     .index("by_event_and_last_name", ["eventId", "lastName", "firstName"]),
 
   eventNotifications: defineTable({
-    eventId: v.id("events"),
+    eventId: v.optional(v.id("events")),
+    eventSlug: v.string(),
     kind: v.union(v.literal("registration_open"), v.literal("waitlist")),
+    contactKey: v.string(),
     parentName: v.string(),
-    normalizedEmail: v.string(),
-    email: v.string(),
-    mobilePhone: v.string(),
+    normalizedEmail: v.optional(v.string()),
+    email: v.optional(v.string()),
+    mobilePhone: v.optional(v.string()),
     emailEnabled: v.boolean(),
     smsEnabled: v.boolean(),
     smsConsentVersion: v.optional(v.string()),
+    smsConsentText: v.optional(v.string()),
     smsConsentAcceptedAt: v.optional(v.number()),
     emailNotifiedAt: v.optional(v.number()),
     smsNotifiedAt: v.optional(v.number()),
     createdAt: v.number(),
+    updatedAt: v.number(),
   })
     .index("by_event", ["eventId"])
-    .index("by_event_and_email", ["eventId", "normalizedEmail"])
+    .index("by_event_slug_and_contact", ["eventSlug", "kind", "contactKey"])
     .index("by_event_and_kind", ["eventId", "kind"]),
 
   adminMemberships: defineTable({
