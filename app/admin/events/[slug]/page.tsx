@@ -60,7 +60,15 @@ export default async function AdminEventPage({
           <div className="metric"><span>Checked in</span><strong>{checkedIn} / {rosterChildren.length}</strong></div>
         </section>
 
-        {canManage && <CommunicationComposer />}
+        {canManage && (
+          <CommunicationComposer
+            eventTitle={event.title}
+            registeredFamilies={event.registeredFamilies}
+            registeredSms={event.registeredSms}
+            waitlistedFamilies={event.waitlistedFamilies}
+            waitlistedSms={event.waitlistedSms}
+          />
+        )}
 
         <section className="table-card">
           <div className="table-card__header roster-toolbar">

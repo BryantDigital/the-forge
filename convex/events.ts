@@ -223,14 +223,32 @@ async function presentEvent(ctx: QueryCtx, event: Doc<"events">) {
     (total, registration) => total + registration.seatCount,
     0,
   );
+  const [registeredSms, waitlistedSms] = await Promise.all([
+    countSmsHouseholds(ctx, confirmed),
+    countSmsHouseholds(ctx, waitlisted),
+  ]);
 
   return {
     ...event,
     imageUrl: imageUrl ?? "/images/forge-brotherhood.jpg",
     registered,
     waitlisted: waitlistSeats,
+    registeredFamilies: confirmed.length,
+    waitlistedFamilies: waitlisted.length,
+    registeredSms,
+    waitlistedSms,
     remaining: Math.max(0, event.capacity - registered),
   };
+}
+
+async function countSmsHouseholds(
+  ctx: QueryCtx,
+  registrations: Doc<"registrations">[],
+) {
+  const households = await Promise.all(
+    registrations.map((registration) => ctx.db.get(registration.householdId)),
+  );
+  return households.filter((household) => Boolean(household?.smsOptInAt)).length;
 }
 
 function validateEvent(args: {

@@ -4,7 +4,19 @@ import { useMemo, useState } from "react";
 
 type Channel = "email" | "sms" | "both";
 
-export function CommunicationComposer() {
+export function CommunicationComposer({
+  eventTitle,
+  registeredFamilies,
+  registeredSms,
+  waitlistedFamilies,
+  waitlistedSms,
+}: {
+  eventTitle: string;
+  registeredFamilies: number;
+  registeredSms: number;
+  waitlistedFamilies: number;
+  waitlistedSms: number;
+}) {
   const [channel, setChannel] = useState<Channel>("both");
   const [audience, setAudience] = useState("registered");
   const [message, setMessage] = useState(
@@ -12,10 +24,23 @@ export function CommunicationComposer() {
   );
 
   const recipients = useMemo(() => {
-    if (audience === "waitlisted") return { email: 4, sms: 3 };
-    if (audience === "all") return { email: 28, sms: 24 };
-    return { email: 24, sms: 21 };
-  }, [audience]);
+    if (audience === "waitlisted") {
+      return { email: waitlistedFamilies, sms: waitlistedSms };
+    }
+    if (audience === "all") {
+      return {
+        email: registeredFamilies + waitlistedFamilies,
+        sms: registeredSms + waitlistedSms,
+      };
+    }
+    return { email: registeredFamilies, sms: registeredSms };
+  }, [
+    audience,
+    registeredFamilies,
+    registeredSms,
+    waitlistedFamilies,
+    waitlistedSms,
+  ]);
 
   return (
     <section className="communication-card" id="message-families">
@@ -62,7 +87,7 @@ export function CommunicationComposer() {
         {(channel === "email" || channel === "both") && (
           <label className="field">
             <span>Email subject</span>
-            <input className="form-control" defaultValue="Important details for The Forge — September 12" required />
+            <input className="form-control" defaultValue={`Important details for ${eventTitle}`} required />
           </label>
         )}
 
