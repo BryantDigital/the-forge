@@ -71,7 +71,13 @@ export function GivingHistory() {
             <article key={subscription.id}>
               <span>{frequencyLabel(subscription.frequency)} gift</span>
               <strong>{formatMoney(subscription.amountInCents, subscription.currency)}</strong>
-              <em>{subscriptionStatus(subscription.status)}</em>
+              <em>
+                {subscriptionStatus(
+                  subscription.status,
+                  subscription.cancelAtPeriodEnd,
+                  subscription.currentPeriodEnd,
+                )}
+              </em>
             </article>
           ))}
         </div>
@@ -132,7 +138,17 @@ function frequencyLabel(
   return frequency.charAt(0).toUpperCase() + frequency.slice(1);
 }
 
-function subscriptionStatus(status: string) {
+function subscriptionStatus(
+  status: string,
+  cancelAtPeriodEnd?: boolean,
+  currentPeriodEnd?: number,
+) {
+  if (cancelAtPeriodEnd && currentPeriodEnd) {
+    return `Cancels ${new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+    }).format(currentPeriodEnd)}`;
+  }
   if (status === "past_due") return "Payment needs attention";
   if (status === "trialing") return "Starting";
   return "Active";

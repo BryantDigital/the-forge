@@ -247,6 +247,7 @@ export default defineSchema({
     currency: v.string(),
     status: v.string(),
     currentPeriodEnd: v.optional(v.number()),
+    cancelAtPeriodEnd: v.optional(v.boolean()),
     cancelledAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),

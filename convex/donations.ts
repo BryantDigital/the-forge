@@ -178,6 +178,7 @@ export const getMyGiving = query({
           frequency: subscription.frequency,
           status: subscription.status,
           currentPeriodEnd: subscription.currentPeriodEnd,
+          cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
         })),
     };
   },
@@ -400,6 +401,7 @@ async function processSubscription(
     currency: String(item?.price?.currency ?? "usd").toLowerCase(),
     status: String(subscription.status ?? "active"),
     currentPeriodEnd: numberValue(subscription.current_period_end || 0) * 1000 || undefined,
+    cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
     cancelledAt:
       subscription.status === "canceled"
         ? numberValue(subscription.canceled_at || eventCreated) * 1000
@@ -455,6 +457,7 @@ async function upsertSubscription(
     currency: string;
     status: string;
     currentPeriodEnd?: number;
+    cancelAtPeriodEnd?: boolean;
     cancelledAt?: number;
   },
 ) {
@@ -717,6 +720,7 @@ type StripeSubscription = {
   metadata?: Record<string, string | undefined>;
   status?: string;
   current_period_end?: number;
+  cancel_at_period_end?: boolean;
   canceled_at?: number;
   items?: {
     data?: Array<{
