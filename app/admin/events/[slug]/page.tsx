@@ -19,6 +19,7 @@ export default async function AdminEventPage({
   });
   const event = await fetchAuthQuery(api.events.getAdminBySlug, { slug });
   const roster = await fetchAuthQuery(api.events.getRoster, { slug });
+  const parentRoster = await fetchAuthQuery(api.events.getParentRoster, { slug });
   if (!event) {
     return (
       <div className="admin-shell">
@@ -70,6 +71,61 @@ export default async function AdminEventPage({
           />
         )}
 
+        {canManage && (
+          <section className="table-card parent-roster-card">
+            <div className="table-card__header roster-toolbar">
+              <div>
+                <h2>Registered parents</h2>
+                <p style={{ margin: "6px 0 0", color: "var(--smoke)" }}>
+                  Household contacts and registration status
+                </p>
+              </div>
+            </div>
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Parent or guardian</th>
+                    <th>Contact</th>
+                    <th>Children</th>
+                    <th>Notifications</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(parentRoster ?? []).map((parent) => (
+                    <tr key={parent.id}>
+                      <td><strong>{parent.parentName}</strong></td>
+                      <td>
+                        <a className="table-link" href={`mailto:${parent.email}`}>{parent.email}</a>
+                        <br />
+                        <a href={`tel:${parent.mobilePhone}`}>{parent.mobilePhone}</a>
+                      </td>
+                      <td>{parent.childCount}</td>
+                      <td>
+                        {[
+                          parent.emailNotificationsEnabled ? "Email" : null,
+                          parent.smsNotificationsEnabled ? "SMS" : null,
+                        ].filter(Boolean).join(" + ") || "None"}
+                      </td>
+                      <td>
+                        <span className={`tag ${parent.status === "confirmed" ? "tag--green" : ""}`}>
+                          {formatRegistrationStatus(parent.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {(parentRoster ?? []).length === 0 && (
+                    <tr>
+                      <td colSpan={5}>No parents have registered for this event yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
         <section className="table-card">
           <div className="table-card__header roster-toolbar">
             <div>
@@ -105,4 +161,11 @@ function formatTime(timestamp: number) {
     hour: "numeric",
     minute: "2-digit",
   }).format(timestamp);
+}
+
+function formatRegistrationStatus(
+  status: "confirmed" | "waitlisted" | "offered" | "cancelled",
+) {
+  if (status === "offered") return "Seat offered";
+  return status.charAt(0).toUpperCase() + status.slice(1);
 }

@@ -113,6 +113,61 @@ export const getRoster = query({
   },
 });
 
+export const getParentRoster = query({
+  args: { slug: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdminAccess(ctx);
+    const event = await ctx.db
+      .query("events")
+      .withIndex("by_slug", (range) => range.eq("slug", args.slug))
+      .unique();
+    if (!event) return null;
+
+    const registrations = await ctx.db
+      .query("registrations")
+      .withIndex("by_event", (range) => range.eq("eventId", event._id))
+      .collect();
+
+    const rows = await Promise.all(
+      registrations
+        .filter((registration) => registration.status !== "cancelled")
+        .map(async (registration) => {
+          const [household, children] = await Promise.all([
+            ctx.db.get(registration.householdId),
+            ctx.db
+              .query("registrationChildren")
+              .withIndex("by_registration", (range) =>
+                range.eq("registrationId", registration._id),
+              )
+              .collect(),
+          ]);
+          if (!household) return null;
+
+          return {
+            id: registration._id,
+            parentName: `${household.parentFirstName} ${household.parentLastName}`,
+            parentLastName: household.parentLastName,
+            email: household.email,
+            mobilePhone: household.mobilePhone,
+            childCount: children.filter((child) => child.status === "active").length,
+            status: registration.status,
+            emailNotificationsEnabled: registration.emailNotificationsEnabled,
+            smsNotificationsEnabled: registration.smsNotificationsEnabled,
+            createdAt: registration.createdAt,
+          };
+        }),
+    );
+
+    return rows
+      .filter((row) => row !== null)
+      .sort(
+        (a, b) =>
+          a.parentLastName.localeCompare(b.parentLastName) ||
+          a.parentName.localeCompare(b.parentName),
+      );
+  },
+});
+
 export const setChildCheckIn = mutation({
   args: {
     registrationChildId: v.id("registrationChildren"),

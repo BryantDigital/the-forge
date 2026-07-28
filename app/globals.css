@@ -2146,6 +2146,19 @@ blockquote cite {
   align-items: center;
 }
 
+.admin-shell .button--ghost {
+  border-color: #29292d;
+  background: #29292d;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.16);
+  color: var(--white);
+}
+
+.admin-shell .button--ghost:hover {
+  border-color: #44444a;
+  background: #44444a;
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.12);
+}
+
 .admin-event-form textarea.form-control {
   min-height: 88px;
   resize: vertical;
@@ -2211,6 +2224,10 @@ blockquote cite {
 .table-card {
   overflow: hidden;
   background: var(--white);
+}
+
+.parent-roster-card {
+  margin-bottom: 34px;
 }
 
 .table-card__header {
