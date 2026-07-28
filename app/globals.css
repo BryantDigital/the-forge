@@ -4126,3 +4126,116 @@ td {
     padding: 24px;
   }
 }
+
+.print-roster__heading {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0.55in;
+  }
+
+  body {
+    background: white !important;
+    color: #111 !important;
+  }
+
+  .admin-header,
+  .admin-main > .text-link,
+  .admin-main > .admin-title,
+  .admin-main > .metric-grid,
+  .admin-main > .communication-card,
+  .admin-main > .parent-roster-card,
+  .print-roster .roster-toolbar,
+  .roster-error {
+    display: none !important;
+  }
+
+  .admin-shell,
+  .admin-main,
+  .print-roster {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .print-roster__heading {
+    display: block;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 4px solid #b81921;
+  }
+
+  .print-roster__heading p {
+    margin: 0 0 7px;
+    color: #b81921;
+    font-size: 9pt;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .print-roster__heading h1 {
+    margin: 0 0 7px;
+    color: #111;
+    font-size: 25pt;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .print-roster__heading span {
+    color: #444;
+    font-size: 10pt;
+  }
+
+  .print-roster .table-scroll {
+    overflow: visible !important;
+  }
+
+  .print-roster table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+  }
+
+  .print-roster thead {
+    display: table-header-group;
+  }
+
+  .print-roster tr {
+    break-inside: avoid;
+  }
+
+  .print-roster th {
+    padding: 9px 8px;
+    background: #151515 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-roster td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #bbb;
+    color: #111 !important;
+  }
+
+  .print-roster .tag {
+    padding: 0;
+    background: transparent !important;
+    color: #111 !important;
+    font-size: 9pt;
+  }
+
+  .print-roster .roster-check {
+    width: 16px;
+    height: 16px;
+    accent-color: #b81921;
+  }
+}

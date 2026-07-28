@@ -219,6 +219,8 @@ standard Next.js build. Both paths have been used during development.
   roster, and child check-in roster.
 - `app/admin/events/[slug]/communication-composer.tsx` — admin broadcast UI and
   delivery history.
+- `app/admin/events/[slug]/roster-actions.tsx` — print and CSV export controls
+  for the authorized child roster.
 - `app/admin/events/[slug]/roster-table.tsx` — durable per-child check-in.
 
 ### Next.js API routes
@@ -238,6 +240,8 @@ standard Next.js build. Both paths have been used during development.
   models and calculates public enrollment states.
 - `lib/rsvp.ts` — authoritative Next-side RSVP validation and consent versions.
 - `lib/event-notifications.ts` — event alert validation.
+- `lib/roster-export.ts` — spreadsheet-safe child-roster CSV generation and
+  stable download filenames.
 - `lib/secure-tokens.ts` — cryptographically secure URL tokens and SHA-256
   hashing.
 - `lib/auth-client.ts` — Better Auth browser client.
@@ -795,7 +799,7 @@ Next build as well catches Vercel-specific issues.
 At the time of this handoff:
 
 - TypeScript passes;
-- 11 tests pass;
+- 15 tests pass;
 - both Vinext and Next production builds pass;
 - ESLint has warnings but no errors.
 
@@ -880,6 +884,8 @@ Verified or implemented:
 - partial cancellation and adding/editing children;
 - parent roster;
 - child-only check-in roster;
+- print-optimized child roster with allergies/notes and attendance;
+- authorized, spreadsheet-safe child roster CSV export;
 - durable attendance;
 - passwordless six-digit email login;
 - owner bootstrap and role-aware admin gates;
@@ -932,11 +938,6 @@ This section is especially important. Do not infer completion from polished UI.
 - There is no role-management UI.
 - There is no full audit-log UI.
 
-### Roster utilities
-
-- Attendance checkboxes work and persist.
-- “Print roster” and “Export CSV” buttons are currently not wired.
-
 ### Communications operations
 
 - Outbound direct SMS has been tested.
@@ -981,36 +982,31 @@ backend state machines. Add Convex integration tests for:
 
 A sensible order from the current state:
 
-1. **Finish roster utilities**
-   - printable roster layout;
-   - secure CSV export;
-   - ensure allergies/notes are included only for authorized staff.
-
-2. **Real admin dashboard**
+1. **Real admin dashboard**
    - replace hardcoded metrics/activity;
    - add volunteer counts;
    - donation reporting;
    - attendance trends;
    - communication health.
 
-3. **Communications hardening**
+2. **Communications hardening**
    - dedicated Forge Twilio account;
    - compliance approval;
    - inbound and status callbacks;
    - STOP/START end-to-end tests;
    - retry strategy and provider failure reporting.
 
-4. **General email list**
+3. **General email list**
    - connect homepage signup;
    - decide whether SendGrid Marketing Campaigns or a Convex-owned list is the
      subscription authority;
    - implement unsubscribe and consent history.
 
-5. **Production Stripe activation**
+4. **Production Stripe activation**
    - only after legal copy, receipts, finance workflow, and live webhook
      verification are approved.
 
-6. **Launch readiness**
+5. **Launch readiness**
    - accessibility and mobile QA;
    - privacy/retention/security work;
    - error monitoring and analytics;

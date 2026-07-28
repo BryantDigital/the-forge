@@ -4,6 +4,7 @@ import { api } from "../../../../convex/_generated/api";
 import { fetchAuthQuery } from "../../../../lib/auth-server";
 import { AdminHeader } from "../../components";
 import { CommunicationComposer } from "./communication-composer";
+import { RosterActions } from "./roster-actions";
 import { RosterTable } from "./roster-table";
 
 export const metadata: Metadata = { title: "Event Roster — Forge Admin" };
@@ -127,7 +128,14 @@ export default async function AdminEventPage({
           </section>
         )}
 
-        <section className="table-card">
+        <section className="table-card print-roster">
+          <div className="print-roster__heading">
+            <p>The Forge Christian Ministries</p>
+            <h1>{event.title}</h1>
+            <span>
+              Child check-in roster · {formatDate(event.startsAt)} · {rosterChildren.length} registered
+            </span>
+          </div>
           <div className="table-card__header roster-toolbar">
             <div>
               <h2>Child check-in</h2>
@@ -135,10 +143,11 @@ export default async function AdminEventPage({
                 Alphabetical roster · attendance saves immediately
               </p>
             </div>
-            <div className="roster-actions">
-              <button className="choice" type="button" style={{ padding: "0 16px" }}>Print roster</button>
-              <button className="choice" type="button" style={{ padding: "0 16px" }}>Export CSV</button>
-            </div>
+            <RosterActions
+              eventTitle={event.title}
+              eventDate={formatDate(event.startsAt)}
+              rosterChildren={rosterChildren}
+            />
           </div>
           <RosterTable rosterChildren={rosterChildren} />
         </section>
