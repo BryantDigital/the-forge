@@ -4922,7 +4922,7 @@ td {
   font-size: 1.05rem;
 }
 
-.volunteer-role-card {
+.volunteer-portal-role-card {
   display: grid;
   align-content: center;
   border-top: 5px solid var(--red);
@@ -4932,19 +4932,19 @@ td {
   color: var(--white);
 }
 
-.volunteer-role-card span,
-.volunteer-role-card strong {
+.volunteer-portal-role-card span,
+.volunteer-portal-role-card strong {
   display: block;
 }
 
-.volunteer-role-card span {
+.volunteer-portal-role-card span {
   color: #c2bdb6;
   font: 800 0.68rem/1 var(--font-display);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.volunteer-role-card strong {
+.volunteer-portal-role-card strong {
   margin-top: 14px;
   font: 800 1.35rem/1.35 var(--font-display);
   text-transform: uppercase;

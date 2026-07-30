@@ -75,7 +75,7 @@ export function VolunteerDashboard() {
             let Forge leadership know you can serve.
           </p>
         </div>
-        <div className="volunteer-role-card">
+        <div className="volunteer-portal-role-card">
           <span>Approved service areas</span>
           <strong>{dashboard.volunteer.roles.join(" · ")}</strong>
         </div>
